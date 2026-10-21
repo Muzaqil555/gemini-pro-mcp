@@ -12,7 +12,7 @@ One MCP server, three ways into Google's AI:
 |---|---|---|---|
 | **Gemini (subscription)** | `gemini_ask`, `gemini_research`, `gemini_models` | [Antigravity CLI](https://antigravity.google) signed in with your Google AI Pro/Ultra account | Free: uses your plan's limits |
 | **Media (Gemini API)** | `video_generate`, `video_edit`, `video_check`, `image_generate` | Official Gemini API: Omni Flash video, Nano Banana images | Paid per use (AI Pro's monthly Cloud credit can cover it) |
-| **Flow** *(experimental)* | `flow_status` (generation in progress) | Your own signed-in Chrome at flow.google.com | Your plan's Flow credits |
+| **Flow** *(experimental)* | `flow_generate`, `flow_approve`, `flow_reject`, `flow_collect`, `flow_status` | Your own signed-in Chrome at flow.google.com | Your plan's monthly Flow credits (e.g. 12 credits for an 8 s video) |
 
 Ask Claude things like:
 
@@ -20,6 +20,7 @@ Ask Claude things like:
 > *"Research what changed in Flutter 3.47, with sources."*
 > *"Make an 8-second vertical video of a red tram crossing Baku at sunset."*
 > *"Turn this logo sketch (`./sketch.png`) into a clean flat icon, 2K."*
+> *"Use my Flow credits for a 9:16 clip of a cat surfing, show me the cost first."*
 
 ## Quick start
 
@@ -110,6 +111,7 @@ The server tells the model to **confirm with you before every paid call**.
 | `GEMINI_PRO_AGY_MODEL` | agy's default | Default model for `gemini_*` tools |
 | `GEMINI_PRO_AGY_TIMEOUT` | `600` | Seconds per Antigravity request |
 | `GEMINI_PRO_ENABLE_FLOW` | off | `1` registers the experimental Flow tools |
+| `GEMINI_PRO_FLOW_PROJECT` | open or most recent project | Flow project id to work in |
 | `GEMINI_PRO_ENV_FILE` | `~/.config/gemini-pro-mcp/.env` | Optional file with any of the above |
 
 ## Flow (experimental)
@@ -122,9 +124,19 @@ uvx --from "gemini-pro-mcp[flow] @ git+https://github.com/Muzaqil555/gemini-pro-
 
 Then set `GEMINI_PRO_ENABLE_FLOW=1`.
 
-> **Read this first.** Automating Flow's website may conflict with Google's terms of service, and it breaks whenever Google changes the page. This project never types or stores your credentials and uses no stealth tricks. If Google shows a CAPTCHA, you solve it. Use at your own risk.
+| Tool | What it does | Credits |
+|---|---|---|
+| `flow_generate` | Sends your request to Flow's agent and returns its answer, including the cost question (*"…1 video generation, costing 12 credits?"*) | none |
+| `flow_approve` | Answers that question with Approve, waits for the result and saves it (720p MP4 / original image) | **spends credits** |
+| `flow_reject` | Declines the pending request | none |
+| `flow_collect` | Downloads the newest items of the project | none |
+| `flow_status` | Checks the sign-in and shows the credits left | none |
 
-Today only `flow_status` is available. Generating and downloading through Flow is the next milestone, and [help is welcome](CONTRIBUTING.md).
+Spending is always a **separate call**: `flow_generate` stops at Flow's own permission question, so the model has to ask you before it calls `flow_approve`. Keep Flow's *"Confirm before generating: Always"* setting on (the default).
+
+Tested on 2026-10-21 with Omni 1.1 Flash: an 8 s, 1280×720, 24 fps video for 12 credits, end to end.
+
+> **Read this first.** Automating Flow's website may conflict with Google's terms of service, and it breaks whenever Google changes the page. This project never types or stores your credentials and uses no stealth tricks. If Google shows a CAPTCHA, you solve it. Use at your own risk.
 
 ## How it works
 
@@ -136,7 +148,8 @@ Claude ── MCP (stdio) ──> gemini-pro-mcp ──┬── agy --print (pl
 
 ## Roadmap
 
-- [ ] Flow: generate, poll and download videos and images with plan credits
+- [x] Flow: generate, approve and download videos with plan credits
+- [ ] Flow: images, scenes (longer videos from several clips), characters
 - [ ] Music generation (Lyria)
 - [ ] Publish to PyPI (`uvx gemini-pro-mcp`)
 - [ ] Deep Research reports

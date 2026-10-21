@@ -72,6 +72,9 @@ def launch_chrome(settings: Settings, url: str = FLOW_URL) -> None:
         f"--user-data-dir={settings.flow_profile_dir}",
         "--no-first-run",
         "--no-default-browser-check",
+        # Flow's labels follow the browser language; the tools expect English.
+        "--lang=en-US",
+        "--accept-lang=en-US,en",
         url,
     ]
     flags = 0

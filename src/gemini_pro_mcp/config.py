@@ -61,6 +61,9 @@ class Settings:
     flow_cdp_port: int
     """Remote debugging port of that Chrome."""
 
+    flow_project: str | None
+    """Flow project id to work in; None uses the open or most recent one."""
+
     @classmethod
     def from_env(cls) -> Settings:
         home = Path.home()
@@ -79,4 +82,5 @@ class Settings:
                 )
             ).expanduser(),
             flow_cdp_port=int(os.environ.get("GEMINI_PRO_FLOW_PORT", "9333")),
+            flow_project=os.environ.get("GEMINI_PRO_FLOW_PROJECT") or None,
         )

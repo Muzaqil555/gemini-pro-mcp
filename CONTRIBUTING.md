@@ -27,7 +27,7 @@ claude mcp add gemini-pro-dev -- uv --directory /path/to/gemini-pro-mcp run gemi
 
 ## Good first issues
 
-- Flow: find stable selectors for the prompt box, the generate button and the result list on flow.google.com, then add `flow_generate_video`.
+- Flow: download images (only videos are tested), and use the Scenes view to stitch several clips into a longer video.
 - Lyria music generation through the Gemini API.
 - A demo GIF for the README.
 - Docs for more MCP clients (Cursor, Windsurf, VS Code, Zed).
