@@ -292,11 +292,23 @@ class Flow:
         before = len(await self.wait_for_media(timeout=5))
         bubbles = await self.page.locator(BUBBLE).count()
         await permission.locator('[role="radio"]').first.click()  # "Approve"
+        return await self.collect_new(before, output_dir, stem, wait_seconds, bubbles)
+
+    async def collect_new(
+        self,
+        before: int,
+        output_dir: Path,
+        stem: str,
+        wait_seconds: float,
+        bubbles: int | None = None,
+    ) -> list[Path]:
+        """Waits for the tiles added after the grid had `before` tiles and saves
+        them. Flow queues generations at busy times, so they can take long."""
         deadline = time.monotonic() + wait_seconds
         saved: dict[int, Path] = {}
         await self.page.wait_for_timeout(5000)
         while time.monotonic() < deadline:
-            if await self.generation_failed(bubbles):
+            if bubbles is not None and await self.generation_failed(bubbles):
                 raise GenerationFailed(await self.last_reply())
             count = max(0, len(await self.media()) - before)
             for index in range(count):
@@ -539,12 +551,22 @@ async def run_job(settings: Settings, job: dict) -> None:
 async def generate_clip(
     settings: Settings, job: dict, request: str, folder: Path, stem: str, attempts: int = 3
 ) -> Path:
-    """One clip, retrying when Flow fails (failed generations are not charged)."""
+    """One clip, retrying when Flow fails (failed generations are not charged).
+    A clip that was approved but is still queued is paid for, so later attempts
+    wait for it instead of generating (and paying) again."""
     last_error = "no answer"
+    queued: int | None = None  # grid size before the approved, still queued clip
     for attempt in range(1, attempts + 1):
         try:
             async with Flow(settings) as flow:
                 await flow.open_project(job.get("project_id"))
+                if queued is not None:
+                    saved = await flow.collect_new(queued, folder, stem, 900)
+                    if saved:
+                        return saved[0]
+                    last_error = "Flow queued the clip and it is not ready yet"
+                    job["status"] = f"{job['status'].split(' (')[0]} (waiting for Flow's queue)"
+                    continue
                 await flow.send(request, new_session=True, wait_seconds=120)
                 if await flow.pending_permission() is None:
                     # The agent asked something instead; answer once in the same chat.
@@ -558,14 +580,20 @@ async def generate_clip(
                         "Flow did not offer to generate: " + (await flow.last_reply())[:200]
                     )
                 else:
+                    queued = len(await flow.media())
                     saved = await flow.approve(folder, stem, 900)
                     if saved:
                         return saved[0]
                     last_error = "the clip did not come back in 15 minutes"
+                    job["status"] = f"{job['status'].split(' (')[0]} (waiting for Flow's queue)"
+                    continue
         except GenerationFailed as e:
+            queued = None
             last_error = f"Flow failed ({str(e)[:120]})"
         job["status"] = f"{job['status'].split(' (')[0]} (attempt {attempt} failed: {last_error})"
         await asyncio.sleep(30 * attempt)
+    if queued is not None:
+        last_error += "; it may still arrive, collect it later with flow_collect"
     raise FlowError(f"{stem}: {last_error} after {attempts} attempts.")
 
 

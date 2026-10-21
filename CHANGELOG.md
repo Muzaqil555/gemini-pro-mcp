@@ -17,3 +17,4 @@
 - Antigravity: `gemini_code` lets Gemini edit a local folder (accept-edits mode, sandboxed terminal), and `gemini_agents` lists custom agents.
 - Jules: `jules_sources`, `jules_start`, `jules_status`, `jules_sessions`, `jules_approve_plan` and `jules_message` use the official REST API (`JULES_API_KEY`).
 - Fixed: concurrent browser connections reset Chrome's download handling and left 0-byte clips. The server now shares one connection, checks every download and falls back to the signed file URL.
+- Fixed: when Flow queues a clip at busy times, `flow_make_video` now waits for the clip it already paid for instead of generating it again.
