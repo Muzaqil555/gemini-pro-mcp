@@ -1,0 +1,14 @@
+name: Feature request
+description: An idea for a new tool or improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to do from Claude?
+    validations:
+      required: true
+  - type: textarea
+    id: how
+    attributes:
+      label: Which Google feature or API would it use?

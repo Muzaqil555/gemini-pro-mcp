@@ -1,0 +1,71 @@
+[project]
+name = "gemini-pro-mcp"
+version = "0.1.0"
+description = "MCP server that brings your Google AI Pro subscription (Gemini via Antigravity CLI, Flow) and the Gemini API (Omni video, Nano Banana images) to Claude and other MCP clients."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Muzaqil Hesenli" }]
+requires-python = ">=3.10"
+keywords = [
+    "mcp",
+    "model-context-protocol",
+    "gemini",
+    "google-ai-pro",
+    "antigravity",
+    "google-flow",
+    "nano-banana",
+    "video-generation",
+    "claude",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "google-genai>=2.32",
+    "mcp>=2.3,<3",
+]
+
+[project.optional-dependencies]
+flow = ["playwright>=1.50"]
+
+[project.scripts]
+gemini-pro-mcp = "gemini_pro_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/Muzaqil555/gemini-pro-mcp"
+Issues = "https://github.com/Muzaqil555/gemini-pro-mcp/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gemini_pro_mcp"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

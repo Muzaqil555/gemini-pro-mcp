@@ -1,0 +1,25 @@
+name: Bug report
+description: Something does not work
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: The tool you called, what you expected, and what you got (error text helps).
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: MCP client
+      placeholder: Claude Code 2.x, Claude Desktop, Cursor...
+  - type: input
+    id: os
+    attributes:
+      label: OS and Python version
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Never paste API keys, cookies or other secrets.
