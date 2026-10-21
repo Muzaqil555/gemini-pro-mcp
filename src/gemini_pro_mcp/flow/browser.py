@@ -131,8 +131,24 @@ def login(settings: Settings) -> int:
     return 0
 
 
+# One CDP connection per server process, shared by every tool call. Each new
+# Playwright connection resets Chrome's download handling, which silently broke
+# downloads still running on another connection (0-byte files).
+_shared: dict = {"playwright": None, "browser": None, "loop": None}
+
+
 async def connect(settings: Settings):
-    """Returns (playwright, browser) attached to the Flow Chrome profile."""
+    """Returns (playwright, browser) attached to the signed-in Chrome profile.
+    The connection is shared and stays open; callers must not close it."""
+    loop = asyncio.get_running_loop()
+    browser = _shared["browser"]
+    if browser is not None and _shared["loop"] is loop and browser.is_connected():
+        return _shared["playwright"], browser
+    if _shared["playwright"] is not None and _shared["loop"] is loop:
+        try:
+            await _shared["playwright"].stop()
+        except Exception:
+            pass
     try:
         from playwright.async_api import async_playwright
     except ImportError as e:
@@ -149,4 +165,5 @@ async def connect(settings: Settings):
     except Exception:
         await playwright.stop()
         raise
+    _shared.update(playwright=playwright, browser=browser, loop=loop)
     return playwright, browser

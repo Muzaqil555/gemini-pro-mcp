@@ -108,6 +108,7 @@ By default the server tells the model to **confirm with you before every paid ca
 | Variable | Default | Meaning |
 |---|---|---|
 | `GEMINI_API_KEY` | (none) | Gemini API key for the media tools |
+| `JULES_API_KEY` | (none) | Jules API key from jules.google.com/settings, for the `jules_*` tools |
 | `GEMINI_PRO_OUTPUT_DIR` | `~/gemini-pro-output` | Where videos and images are saved |
 | `AGY_PATH` | `agy` on PATH | Path to the Antigravity CLI |
 | `GEMINI_PRO_AGY_MODEL` | agy's default | Default model for `gemini_*` tools |
@@ -126,11 +127,12 @@ By default the server tells the model to **confirm with you before every paid ca
 | Gemini app: 4 Argon, 3.1 Pro, thinking levels, files | `gemini_app` |
 | Deep Research | `gemini_app(tool="deep_research")`, then `gemini_app_result` |
 | Images (Nano Banana), Veo videos, music, Canvas, Guided learning in Gemini | `gemini_app(tool=...)` |
-| Gemini Notebook (former NotebookLM): sources, Audio/Video Overviews, quizzes... | `google_page` / `google_act` |
+| Gemini Notebook (former NotebookLM): sources, Audio/Video Overviews, slides, quizzes... | `notebook_list`, `notebook_create`, `notebook_add_sources`, `notebook_ask`, `notebook_studio` |
 | AI Mode in Google Search | `google_ai_mode` |
 | Google Flow: video, images, every Flow tool | `flow_*` tools |
-| Antigravity: Gemini 4 Argon on your quota | `gemini_ask`, `gemini_research` |
-| AI Studio, Jules, Colab, Flow Music, Gemini in Docs | `google_page` / `google_act` |
+| Antigravity: Gemini 4 Argon on your quota | `gemini_ask`, `gemini_research`, `gemini_code` (edits a folder), `gemini_agents` |
+| Jules coding agent (GitHub, PRs) | `jules_start`, `jules_status`, `jules_approve_plan`, `jules_message`, `jules_sources`, `jules_sessions` (official API, `JULES_API_KEY`) |
+| AI Studio, Colab, Flow Music, Gemini in Docs | `google_page` / `google_act` |
 | $10/month Cloud credit (Developer Program) | `video_generate`, `image_generate` (Gemini API) |
 | 5 TB storage, Gmail, Calendar | Google's official MCP connectors |
 | Mobile-only or US-only features (Photos AI, Auto browse, TV Create Hub, Earth...) | Listed by `google_pro_benefits` as out of reach |

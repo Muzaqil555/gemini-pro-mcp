@@ -15,6 +15,14 @@ BASE = {
     "image_generate",
     "video_stitch",
     "google_pro_benefits",
+    "gemini_code",
+    "gemini_agents",
+    "jules_sources",
+    "jules_start",
+    "jules_status",
+    "jules_sessions",
+    "jules_approve_plan",
+    "jules_message",
 }
 FLOW = {
     "flow_status",
@@ -31,6 +39,11 @@ FLOW = {
     "gemini_app",
     "gemini_app_result",
     "google_ai_mode",
+    "notebook_list",
+    "notebook_create",
+    "notebook_add_sources",
+    "notebook_ask",
+    "notebook_studio",
 }
 
 

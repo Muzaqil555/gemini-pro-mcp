@@ -49,6 +49,18 @@ SNAPSHOT_JS = r"""(prefix) => {
   return {text, items};
 }"""
 
+# Downloads a URL inside the page (with its cookies) and returns base64.
+FETCH_JS = r"""async (src) => {
+  const response = await fetch(src);
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  const blob = await response.blob();
+  const buffer = new Uint8Array(await blob.arrayBuffer());
+  let binary = '';
+  for (let i = 0; i < buffer.length; i += 0x8000)
+    binary += String.fromCharCode.apply(null, buffer.subarray(i, i + 0x8000));
+  return {type: blob.type, data: btoa(binary)};
+}"""
+
 SKIP_FRAMES = (
     "recaptcha",
     "accounts.google.com",

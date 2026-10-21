@@ -14,6 +14,7 @@ spending and the tools answer it themselves.
 from __future__ import annotations
 
 import asyncio
+import base64
 import inspect
 import json
 import re
@@ -86,11 +87,7 @@ class Flow:
         return self
 
     async def __aexit__(self, *exc):
-        try:
-            await self.browser.close()  # disconnects; the user's Chrome keeps running
-            await self.playwright.stop()
-        finally:
-            self.lock.release()
+        self.lock.release()  # the shared connection stays open (see browser.connect)
 
     async def _page(self):
         pages = [page for context in self.browser.contexts for page in context.pages]
@@ -234,19 +231,38 @@ class Flow:
                     break
             if choice is None:
                 return None
-            async with page.expect_download(timeout=120_000) as info:
-                await choice.click()
-            download = await info.value
+            signed: list[str] = []
+
+            def on_request(request) -> None:  # Flow fetches the signed file URL first
+                if "flow-content.google/" in request.url and "Signature=" in request.url:
+                    signed.append(request.url)
+
+            page.on("request", on_request)
+            try:
+                async with page.expect_download(timeout=120_000) as info:
+                    await choice.click()
+                download = await info.value
+            finally:
+                page.remove_listener("request", on_request)
             extension = Path(download.suggested_filename).suffix or (
                 ".mp4" if item["kind"] == "video" else ".png"
             )
             output_dir.mkdir(parents=True, exist_ok=True)
             path = output_dir / f"{stem}{extension}"
             n = 2
-            while path.exists():
+            while path.exists() and path.stat().st_size:
                 path = output_dir / f"{stem}-{n}{extension}"
                 n += 1
-            await download.save_as(path)
+            try:
+                await download.save_as(path)
+            except Exception:
+                pass
+            if (not path.exists() or path.stat().st_size == 0) and signed:
+                result = await page.evaluate(flow_page_lib.FETCH_JS, signed[-1])
+                path.write_bytes(base64.b64decode(result["data"]))
+            if not path.exists() or path.stat().st_size == 0:
+                path.unlink(missing_ok=True)
+                raise FlowError("Flow's download came back empty; try flow_collect again.")
             return path
         finally:
             if project and "/edit/" in page.url:  # back from the editor
@@ -492,7 +508,7 @@ async def run_job(settings: Settings, job: dict) -> None:
         job["done_clips"] = 0
         for index, (shot, seconds) in enumerate(zip(shots, lengths, strict=True), start=1):
             stem = f"{job['stem']}-{index:02d}"
-            existing = sorted(folder.glob(f"{stem}.*"))
+            existing = [p for p in sorted(folder.glob(f"{stem}.*")) if p.stat().st_size > 0]
             if existing:  # done in an earlier run
                 clips.append(existing[0])
                 job["clips"], job["done_clips"] = clips, index

@@ -60,6 +60,8 @@ def build_args(
     add_dirs: list[Path] | None = None,
     effort: str | None = None,
     timeout: int = 600,
+    mode: str = "plan",
+    agent: str | None = None,
 ) -> list[str]:
     args = [
         agy,
@@ -68,7 +70,7 @@ def build_args(
         "--output-format",
         "json",
         "--mode",
-        "plan",
+        mode,
         "--sandbox",
         "--print-timeout",
         f"{timeout}s",
@@ -79,6 +81,8 @@ def build_args(
         args += ["--conversation", conversation_id]
     if effort:
         args += ["--effort", effort]
+    if agent:
+        args += ["--agent", agent]
     for directory in add_dirs or []:
         args += ["--add-dir", str(directory)]
     return args
@@ -161,10 +165,14 @@ async def ask(
     conversation_id: str | None = None,
     paths: list[str] | None = None,
     effort: str | None = None,
+    mode: str = "plan",
+    agent: str | None = None,
+    cwd: Path | None = None,
 ) -> AgyResult:
     if not settings.agy_path:
         raise AgyError(INSTALL_HINT)
-    cwd, extra_dirs, files = workspace_for(paths)
+    workdir, extra_dirs, files = workspace_for(paths)
+    cwd = cwd or workdir
     if files:
         listed = "\n".join(f"- {f}" for f in files)
         prompt = f"Files to use:\n{listed}\n\n{prompt}"
@@ -181,6 +189,8 @@ async def ask(
         add_dirs=extra_dirs,
         effort=effort,
         timeout=settings.agy_timeout,
+        mode=mode,
+        agent=agent,
     )
     return parse_output(await run_agy(args, cwd, settings.agy_timeout))
 
@@ -281,6 +291,72 @@ def register(mcp: MCPServer, settings: Settings) -> None:
             )
         except AgyError as e:
             return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True
+        )
+    )
+    async def gemini_code(
+        task: str,
+        folder: str,
+        model: str | None = None,
+        agent: str | None = None,
+        effort: Effort | None = None,
+        conversation_id: str | None = None,
+    ) -> str:
+        """Let Gemini (Antigravity agent, on the user's Google AI Pro quota) do a
+        coding task IN a local folder: it reads and EDITS files there. Terminal
+        commands stay sandboxed. No API cost.
+
+        Good for delegating a well-defined change (fix a bug, add tests, refactor a
+        module) while you review the diff afterwards (e.g. `git diff`).
+
+        Args:
+            task: What to change, with acceptance criteria.
+            folder: The project folder Gemini works in (only this folder).
+            model: Model id from gemini_models; default is agy's.
+            agent: An Antigravity agent name from gemini_agents, if wanted.
+            effort: low, medium, high, xhigh or max.
+            conversation_id: Continue an earlier gemini_code/gemini_ask chat.
+
+        Returns:
+            Gemini's summary of what it changed and a conversation_id.
+        """
+        try:
+            path = Path(folder).expanduser().resolve()
+            if not path.is_dir():
+                return f"Error: folder not found: {path}"
+            return format_result(
+                await ask(
+                    settings,
+                    task,
+                    model=model,
+                    conversation_id=conversation_id,
+                    effort=effort,
+                    mode="accept-edits",
+                    agent=agent,
+                    cwd=path,
+                )
+            )
+        except AgyError as e:
+            return f"Error: {e}"
+
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, openWorldHint=True))
+    async def gemini_agents() -> str:
+        """List the Antigravity agents available to the user (custom agents they
+        made or installed). Pass a name as `agent` to gemini_code. Free.
+
+        Returns:
+            The agent names.
+        """
+        if not settings.agy_path:
+            return f"Error: {INSTALL_HINT}"
+        try:
+            out = await run_agy([settings.agy_path, "agents"], Path.cwd(), 60)
+        except AgyError as e:
+            return f"Error: {e}"
+        return out.strip() or "No custom agents."
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, openWorldHint=True))
     async def gemini_models() -> str:

@@ -447,6 +447,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "google-genai" },
+    { name = "httpx" },
     { name = "mcp" },
 ]
 
@@ -466,6 +467,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "google-genai", specifier = ">=2.32" },
+    { name = "httpx", specifier = ">=0.27" },
     { name = "imageio-ffmpeg", marker = "extra == 'flow'", specifier = ">=0.6" },
     { name = "mcp", specifier = ">=2.3,<3" },
     { name = "playwright", marker = "extra == 'flow'", specifier = ">=1.50" },

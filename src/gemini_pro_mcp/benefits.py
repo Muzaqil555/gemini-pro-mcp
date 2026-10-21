@@ -30,8 +30,9 @@ BENEFITS: list[dict[str, str]] = [
     {
         "name": "Gemini Notebook (former NotebookLM): 300 sources, Audio/Video Overviews, "
         "flashcards, quizzes, slides, infographics",
-        "site": "https://gemini.google.com (Notebooks)",
-        "how": "web: google_page/google_act",
+        "site": "https://notebook.google.com",
+        "how": "notebook_list, notebook_create, notebook_add_sources, notebook_ask, "
+        "notebook_studio",
     },
     {
         "name": "Gemini 4 Argon in AI Mode (Google Search)",
@@ -53,7 +54,8 @@ BENEFITS: list[dict[str, str]] = [
     {
         "name": "Google Antigravity (higher limits, Gemini 4 Argon, Claude models)",
         "site": "https://antigravity.google",
-        "how": "gemini_ask, gemini_research, gemini_models (Antigravity CLI)",
+        "how": "gemini_ask, gemini_research, gemini_code (edits a folder), gemini_agents, "
+        "gemini_models (Antigravity CLI)",
     },
     {
         "name": "Google AI Studio (higher limits, Nano Banana Pro, app building)",
@@ -63,7 +65,8 @@ BENEFITS: list[dict[str, str]] = [
     {
         "name": "Jules coding agent (GitHub, higher task limits)",
         "site": "https://jules.google.com",
-        "how": "web: google_page/google_act",
+        "how": "jules_sources, jules_start, jules_status, jules_sessions, jules_approve_plan, "
+        "jules_message (official API, JULES_API_KEY)",
     },
     {
         "name": "Google Developer Program premium: $10/month Cloud credit, Code Assist, "

@@ -7,16 +7,21 @@ import sys
 
 from mcp.server.mcpserver import MCPServer
 
-from . import __version__, agy, benefits, media, stitch
+from . import __version__, agy, benefits, jules, media, stitch
 from .config import Settings, load_env_file
 
 INSTRUCTIONS = """\
 Tools for everything a Google AI Pro plan includes. google_pro_benefits lists each
 benefit and the tool that reaches it; start there when unsure.
 
-- gemini_ask, gemini_research, gemini_models: Gemini through the Antigravity CLI on
-  the user's Google AI Pro subscription. No API cost; good for second opinions,
-  reading local files and sourced web research.
+- gemini_ask, gemini_research, gemini_code, gemini_agents, gemini_models: Gemini
+  through the Antigravity CLI on the user's Google AI Pro subscription. No API cost;
+  second opinions, reading local files, sourced web research, and gemini_code, which
+  EDITS files in a given folder (delegate a coding task, then review the diff).
+- jules_*: Jules, Google's cloud coding agent, on GitHub repos (official API; needs
+  JULES_API_KEY from jules.google.com/settings).
+- notebook_*: Gemini Notebook (formerly NotebookLM): notebooks, sources, grounded
+  questions, Studio outputs (Audio/Video Overviews, slides, mind maps, quizzes...).
 - video_generate, video_edit, video_check, image_generate, video_stitch: the official
   Gemini API (video_stitch is local and free). The generation tools COST MONEY, billed
   to the API key's Google Cloud project.
@@ -56,12 +61,14 @@ def build_server(settings: Settings | None = None) -> MCPServer:
     agy.register(server, settings)
     media.register(server, settings)
     stitch.register(server, settings)
+    jules.register(server, settings)
     if settings.flow_enabled:
-        from . import google_web
+        from . import google_web, notebook
         from .flow import tools as flow_tools
 
         flow_tools.register(server, settings)
         google_web.register(server, settings)
+        notebook.register(server, settings)
     else:
         benefits.register(server)
     return server

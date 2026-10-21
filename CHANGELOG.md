@@ -13,3 +13,7 @@
 - `flow_make_video` is more reliable: it saves its shot plan to `plan.json` and resumes from the clips already made. A failed clip is retried up to 3 times; Flow does not charge for failures.
 - The whole Google AI Pro plan is now covered: `google_pro_benefits` (a catalog of what the plan includes and how to reach each part), `gemini_app` and `gemini_app_result` (the Gemini app: 4 Argon, Deep Research, images, Veo, music, Canvas, files), `google_ai_mode` (AI Mode in Search), and `google_page` / `google_act` (any Google AI site, like a person; these replace `flow_page` / `flow_act`).
 - `GEMINI_PRO_ENABLE_BROWSER=1` enables all browser tools. Each site gets its own tab and lock, and Chrome no longer pauses background tabs.
+- Gemini Notebook (formerly NotebookLM): `notebook_list`, `notebook_create`, `notebook_add_sources`, `notebook_ask`, `notebook_studio` (Audio and Video Overviews, slide decks, mind maps, reports, flashcards, quizzes, infographics, data tables).
+- Antigravity: `gemini_code` lets Gemini edit a local folder (accept-edits mode, sandboxed terminal), and `gemini_agents` lists custom agents.
+- Jules: `jules_sources`, `jules_start`, `jules_status`, `jules_sessions`, `jules_approve_plan` and `jules_message` use the official REST API (`JULES_API_KEY`).
+- Fixed: concurrent browser connections reset Chrome's download handling and left 0-byte clips. The server now shares one connection, checks every download and falls back to the signed file URL.

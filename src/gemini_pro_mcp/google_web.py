@@ -34,6 +34,7 @@ OPERATE = {
     "flow.google.com",
     "gemini.google.com",
     "notebooklm.google.com",
+    "notebook.google.com",
     "aistudio.google.com",
     "jules.google.com",
     "colab.research.google.com",
@@ -49,16 +50,7 @@ OPERATE = {
 }
 READ_ONLY_SITES = {"one.google.com", "support.google.com", "developers.google.com"}
 
-FETCH_JS = r"""async (src) => {
-  const response = await fetch(src);
-  if (!response.ok) throw new Error('HTTP ' + response.status);
-  const blob = await response.blob();
-  const buffer = new Uint8Array(await blob.arrayBuffer());
-  let binary = '';
-  for (let i = 0; i < buffer.length; i += 0x8000)
-    binary += String.fromCharCode.apply(null, buffer.subarray(i, i + 0x8000));
-  return {type: blob.type, data: btoa(binary)};
-}"""
+FETCH_JS = page_lib.FETCH_JS
 
 _last_host = {"value": "gemini.google.com"}
 
@@ -104,11 +96,7 @@ class Tab:
         return self
 
     async def __aexit__(self, *exc):
-        try:
-            await self.browser.close()  # disconnects; the user's Chrome keeps running
-            await self.playwright.stop()
-        finally:
-            self.lock.release()
+        self.lock.release()  # the shared connection stays open (see browser.connect)
 
     async def goto(self, url: str, settle_ms: int = 4000) -> None:
         await self.page.goto(with_english(url), wait_until="domcontentloaded")
