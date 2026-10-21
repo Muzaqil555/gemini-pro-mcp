@@ -29,7 +29,7 @@ from .. import agy
 from ..config import Settings, spending_note
 from ..stitch import StitchError, stitch, unique_path
 from . import page as flow_page_lib
-from .browser import FlowError, connect
+from .browser import FlowError, connect, lock_for
 
 HOME = "https://flow.google.com/?hl=en"
 PROJECT = "https://flow.google.com/project/{id}?hl=en"
@@ -62,8 +62,6 @@ MEDIA_JS = r"""() => [...document.querySelectorAll('flow-grid-tile-container')]
 # The editor's "Download media" button (its icon ligature is "download").
 DOWNLOAD_MENU = 'button[aria-haspopup="menu"]:has-text("download")'
 
-# Flow allows one browser driver at a time; tool calls and jobs take turns.
-_LOCK = asyncio.Lock()
 
 PAID = ToolAnnotations(
     readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
@@ -77,12 +75,13 @@ class Flow:
         self.settings = settings
 
     async def __aenter__(self):
-        await _LOCK.acquire()
+        self.lock = lock_for("flow.google.com")  # tool calls and jobs take turns
+        await self.lock.acquire()
         try:
             self.playwright, self.browser = await connect(self.settings)
             self.page = await self._page()
         except BaseException:
-            _LOCK.release()
+            self.lock.release()
             raise
         return self
 
@@ -91,7 +90,7 @@ class Flow:
             await self.browser.close()  # disconnects; the user's Chrome keeps running
             await self.playwright.stop()
         finally:
-            _LOCK.release()
+            self.lock.release()
 
     async def _page(self):
         pages = [page for context in self.browser.contexts for page in context.pages]
@@ -673,71 +672,12 @@ def register(mcp: MCPServer, settings: Settings) -> None:
                         )
                         await card.first.locator("span").first.dispatch_event("click")
                         await flow.page.wait_for_timeout(6000)
+                        from .. import google_web
+
+                        google_web._last_host["value"] = "flow.google.com"
                         return await flow_page_lib.snapshot(flow.page)
                 names = ", ".join(c["name"] for cards in groups.values() for c in cards)
                 return f"No Flow tool named {name!r}. Available: {names}"
-        except Exception as e:  # browser automation can fail in many ways
-            return failure(e)
-
-    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, openWorldHint=True))
-    async def flow_page(url: str | None = None) -> str:
-        """EXPERIMENTAL: show the current Flow page (or open a flow.google.com URL)
-        as text with numbered elements, including tool iframes. Free.
-
-        Use it with flow_act to reach any Flow feature the other tools do not
-        cover: Characters, Scenes, Library, a tool's controls, upscaling...
-
-        Args:
-            url: Optional flow.google.com URL to open first.
-
-        Returns:
-            Page text and elements like "[12] button 'Download media'".
-        """
-        try:
-            async with Flow(settings) as flow:
-                if url:
-                    await flow.goto(url)
-                await flow.close_account_panel()
-                return await flow_page_lib.snapshot(flow.page)
-        except Exception as e:  # browser automation can fail in many ways
-            return failure(e)
-
-    @mcp.tool(annotations=PAID)
-    async def flow_act(
-        ref: str,
-        action: flow_page_lib.Action = "click",
-        text: str | None = None,
-        files: list[str] | None = None,
-        wait_seconds: int = 3,
-    ) -> str:
-        """EXPERIMENTAL: act on an element from flow_page / flow_open_tool, like a person.
-
-        Some buttons (Generate, Upscale, a tool's Run...) spend Flow credits.
-        Never types into sign-in or password fields.
-
-        Args:
-            ref: Element number from the last snapshot, e.g. "12" or "f1:3".
-            action: click, type, replace (clear then type), press (a key, e.g.
-                "Enter"), upload (local `files`), select (option label in `text`),
-                hover or scroll.
-            text: Text to type, key to press or option to select.
-            files: Local file paths for action="upload".
-            wait_seconds: How long to wait afterwards, e.g. 120 for an export that
-                renders and then downloads a file.
-
-        Returns:
-            Saved downloads (if the action started one) and the page afterwards,
-            with fresh element numbers.
-        """
-        try:
-            async with Flow(settings) as flow:
-                saved = await flow_page_lib.act(
-                    flow.page, ref, action, text, files, settings.output_dir, wait_seconds
-                )
-                header = "".join(f"Downloaded: {p}\n" for p in saved)
-                return header + await flow_page_lib.snapshot(flow.page)
-        except ValueError as e:
-            return f"Error: {e}"
         except Exception as e:  # browser automation can fail in many ways
             return failure(e)
 

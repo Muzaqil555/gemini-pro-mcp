@@ -53,7 +53,8 @@ class Settings:
     """Seconds an Antigravity request may run."""
 
     flow_enabled: bool
-    """Whether the experimental Google Flow browser tools are registered."""
+    """Whether the browser tools (Flow, Gemini app, AI Mode, other Google AI
+    sites) are registered: GEMINI_PRO_ENABLE_BROWSER=1 (or ..._ENABLE_FLOW=1)."""
 
     flow_profile_dir: Path
     """Chrome profile used by the Flow tools (signed in by the user)."""
@@ -78,7 +79,7 @@ class Settings:
             agy_path=os.environ.get("AGY_PATH") or shutil.which("agy"),
             agy_model=os.environ.get("GEMINI_PRO_AGY_MODEL") or None,
             agy_timeout=int(os.environ.get("GEMINI_PRO_AGY_TIMEOUT", "600")),
-            flow_enabled=_flag("GEMINI_PRO_ENABLE_FLOW"),
+            flow_enabled=_flag("GEMINI_PRO_ENABLE_BROWSER") or _flag("GEMINI_PRO_ENABLE_FLOW"),
             flow_profile_dir=Path(
                 os.environ.get(
                     "GEMINI_PRO_FLOW_PROFILE",

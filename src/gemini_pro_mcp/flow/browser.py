@@ -8,6 +8,7 @@ check, the user answers it in that window.
 
 from __future__ import annotations
 
+import asyncio
 import os
 import platform
 import shutil
@@ -23,6 +24,16 @@ FLOW_URL = "https://flow.google.com/"
 
 class FlowError(RuntimeError):
     pass
+
+
+_locks: dict[str, asyncio.Lock] = {}
+
+
+def lock_for(host: str) -> asyncio.Lock:
+    """One driver per site tab at a time; different sites run side by side."""
+    if host not in _locks:
+        _locks[host] = asyncio.Lock()
+    return _locks[host]
 
 
 def find_chrome() -> str | None:
@@ -75,6 +86,11 @@ def launch_chrome(settings: Settings, url: str = FLOW_URL) -> None:
         # Flow's labels follow the browser language; the tools expect English.
         "--lang=en-US",
         "--accept-lang=en-US,en",
+        # Several Google apps run in tabs at once (Flow, Gemini, Notebook...);
+        # Chrome would otherwise pause the background ones mid-answer.
+        "--disable-background-timer-throttling",
+        "--disable-renderer-backgrounding",
+        "--disable-backgrounding-occluded-windows",
         url,
     ]
     flags = 0

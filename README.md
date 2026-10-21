@@ -1,17 +1,18 @@
 # gemini-pro-mcp
 
-**Use the Google AI Pro subscription you already pay for from Claude (or any MCP client).**
+**Use everything in the Google AI Pro subscription you already pay for from Claude, or any other MCP client: the Gemini app, Deep Research, Flow, AI Mode, Gemini Notebooks, AI Studio, Jules and more.**
 
 [![CI](https://github.com/Muzaqil555/gemini-pro-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Muzaqil555/gemini-pro-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
 
-One MCP server, three ways into Google's AI:
+One MCP server, four ways into Google's AI:
 
 | Group | Tools | Runs on | Cost |
 |---|---|---|---|
 | **Gemini (subscription)** | `gemini_ask`, `gemini_research`, `gemini_models` | [Antigravity CLI](https://antigravity.google) signed in with your Google AI Pro/Ultra account | Free: uses your plan's limits |
 | **Media (Gemini API)** | `video_generate`, `video_edit`, `video_check`, `image_generate`, `video_stitch` | Official Gemini API: Omni Flash video, Nano Banana images | Paid per use (AI Pro's monthly Cloud credit can cover it) |
+| **Google AI web apps** *(experimental)* | `gemini_app`, `gemini_app_result`, `google_ai_mode`, `google_page`, `google_act`, `google_pro_benefits` | Your own signed-in Chrome: Gemini app, Notebooks, AI Mode, AI Studio, Jules, Colab, Flow Music, Docs | Your plan's limits |
 | **Flow** *(experimental)* | `flow_make_video`, `flow_job`, `flow_generate`, `flow_approve`, `flow_reject`, `flow_collect`, `flow_status`, `flow_tools`, `flow_open_tool`, `flow_page`, `flow_act`: **every Flow feature and tool** | Your own signed-in Chrome at flow.google.com | Your plan's monthly Flow credits (e.g. 12 credits for an 8 s video) |
 
 Ask Claude things like:
@@ -111,10 +112,31 @@ By default the server tells the model to **confirm with you before every paid ca
 | `AGY_PATH` | `agy` on PATH | Path to the Antigravity CLI |
 | `GEMINI_PRO_AGY_MODEL` | agy's default | Default model for `gemini_*` tools |
 | `GEMINI_PRO_AGY_TIMEOUT` | `600` | Seconds per Antigravity request |
-| `GEMINI_PRO_ENABLE_FLOW` | off | `1` registers the experimental Flow tools |
+| `GEMINI_PRO_ENABLE_BROWSER` | off | `1` registers the browser tools (Flow, Gemini app, AI Mode, Google AI sites) |
 | `GEMINI_PRO_FLOW_PROJECT` | open or most recent project | Flow project id to work in |
 | `GEMINI_PRO_AUTO_APPROVE` | off | `1` = spending is pre-approved: no confirmation questions, Flow requests are approved automatically |
 | `GEMINI_PRO_ENV_FILE` | `~/.config/gemini-pro-mcp/.env` | Optional file with any of the above |
+
+## Everything in Google AI Pro
+
+`google_pro_benefits` lists every benefit of the plan and the tool that reaches it. Here is the short version:
+
+| Benefit | How this server reaches it |
+|---|---|
+| Gemini app: 4 Argon, 3.1 Pro, thinking levels, files | `gemini_app` |
+| Deep Research | `gemini_app(tool="deep_research")`, then `gemini_app_result` |
+| Images (Nano Banana), Veo videos, music, Canvas, Guided learning in Gemini | `gemini_app(tool=...)` |
+| Gemini Notebook (former NotebookLM): sources, Audio/Video Overviews, quizzes... | `google_page` / `google_act` |
+| AI Mode in Google Search | `google_ai_mode` |
+| Google Flow: video, images, every Flow tool | `flow_*` tools |
+| Antigravity: Gemini 4 Argon on your quota | `gemini_ask`, `gemini_research` |
+| AI Studio, Jules, Colab, Flow Music, Gemini in Docs | `google_page` / `google_act` |
+| $10/month Cloud credit (Developer Program) | `video_generate`, `image_generate` (Gemini API) |
+| 5 TB storage, Gmail, Calendar | Google's official MCP connectors |
+| Mobile-only or US-only features (Photos AI, Auto browse, TV Create Hub, Earth...) | Listed by `google_pro_benefits` as out of reach |
+| Buying AI credits | Never automated |
+
+`google_page` and `google_act` work like a person in your browser. They read a page as numbered elements, then click, type, upload files, choose options and download results, so a new feature in any of these apps is usable on day one. They only operate the Google AI sites listed in `google_web.py`. Sign-in, payment and account pages are off limits.
 
 ## Flow (experimental)
 
@@ -124,7 +146,7 @@ By default the server tells the model to **confirm with you before every paid ca
 uvx --from "gemini-pro-mcp[flow] @ git+https://github.com/Muzaqil555/gemini-pro-mcp" gemini-pro-mcp flow-login
 ```
 
-Then set `GEMINI_PRO_ENABLE_FLOW=1`.
+Then set `GEMINI_PRO_ENABLE_BROWSER=1` (the older `GEMINI_PRO_ENABLE_FLOW=1` still works). This enables every browser-based tool: Flow, the Gemini app, AI Mode and the other Google AI sites, all in that one signed-in profile.
 
 | Tool | What it does | Credits |
 |---|---|---|
@@ -137,9 +159,9 @@ Then set `GEMINI_PRO_ENABLE_FLOW=1`.
 | `flow_status` | Checks the sign-in and shows the credits left | none |
 | `flow_tools` | Lists every Flow tool: Google's (Image Editor, Mockup, Shot Explorer, Mask Magic, Video Resizer, Transition Machine, Type Overlays, Shader Effects, Poster Designer…), the community's and your own | none |
 | `flow_open_tool` | Opens a tool by name and shows its interface (a Google or community tool becomes your own "Remix of …" copy, as in Flow) | none |
-| `flow_page` / `flow_act` | Read any Flow page or tool as numbered elements, then click, type, upload files, pick options or export, like a person. This reaches whatever has no dedicated tool: Characters, Scenes, Library, upscaling, each tool's controls | depends on the button |
+| `google_page` / `google_act` | Read any Flow page or tool as numbered elements, then click, type, upload files, pick options or export, like a person. This reaches whatever has no dedicated tool: Characters, Scenes, Library, upscaling, each tool's controls | depends on the button |
 
-**Every Flow feature is reachable.** Flow's agent (`flow_generate`) handles anything you can ask in words, and `flow_page` + `flow_act` operate anything with buttons. For example, *"put my last clip through Video Resizer at 9:16"* opens the tool, imports the clip, exports a 9:16 copy and downloads it. That flow was tested end to end.
+**Every Flow feature is reachable.** Flow's agent (`flow_generate`) handles anything you can ask in words, and `google_page` + `google_act` operate anything with buttons. For example, *"put my last clip through Video Resizer at 9:16"* opens the tool, imports the clip, exports a 9:16 copy and downloads it. That flow was tested end to end.
 
 By default spending is a **separate call**: `flow_generate` stops at Flow's own permission question, and the model has to ask you before it calls `flow_approve`. With `GEMINI_PRO_AUTO_APPROVE=1` the tools approve it themselves. Either way, keep Flow's *"Confirm before generating: Always"* setting on (the default), because the tools rely on that question.
 

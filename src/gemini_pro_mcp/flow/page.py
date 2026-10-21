@@ -49,7 +49,16 @@ SNAPSHOT_JS = r"""(prefix) => {
   return {text, items};
 }"""
 
-SKIP_FRAMES = ("recaptcha", "accounts.google.com", "about:blank", "googletagmanager")
+SKIP_FRAMES = (
+    "recaptcha",
+    "accounts.google.com",
+    "about:blank",
+    "googletagmanager",
+    "ogs.google.com",  # the Google bar (apps grid, account card)
+    "apis.google.com",
+    "notifications.google.com",
+    "accounts.youtube.com",
+)
 
 
 def describe(item: dict) -> str:
@@ -174,8 +183,8 @@ async def act(
 
 
 async def _act(page, ref: str, action: str, text: str | None, files: list[str] | None) -> None:
-    if not page.url.startswith(ALLOWED):
-        raise ValueError("Only flow.google.com pages can be operated.")
+    if "accounts.google.com" in page.url:
+        raise ValueError("Sign-in pages are never operated; the user signs in.")
     target = frame_for(page, ref).locator(f'[data-gpm-ref="{ref}"]').first
     if not await target.count():
         raise ValueError(f"No element [{ref}] (the page changed); call flow_page again.")

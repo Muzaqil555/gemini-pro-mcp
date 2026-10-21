@@ -11,3 +11,5 @@
 - `GEMINI_PRO_AUTO_APPROVE=1` is for users who pre-approve spending.
 - Every Flow feature is now reachable: `flow_tools` and `flow_open_tool` open any Flow tool, and `flow_page` and `flow_act` read and operate any Flow page or tool frame, including clicks, typing, uploads and downloads.
 - `flow_make_video` is more reliable: it saves its shot plan to `plan.json` and resumes from the clips already made. A failed clip is retried up to 3 times; Flow does not charge for failures.
+- The whole Google AI Pro plan is now covered: `google_pro_benefits` (a catalog of what the plan includes and how to reach each part), `gemini_app` and `gemini_app_result` (the Gemini app: 4 Argon, Deep Research, images, Veo, music, Canvas, files), `google_ai_mode` (AI Mode in Search), and `google_page` / `google_act` (any Google AI site, like a person; these replace `flow_page` / `flow_act`).
+- `GEMINI_PRO_ENABLE_BROWSER=1` enables all browser tools. Each site gets its own tab and lock, and Chrome no longer pauses background tabs.

@@ -7,11 +7,12 @@ import sys
 
 from mcp.server.mcpserver import MCPServer
 
-from . import __version__, agy, media, stitch
+from . import __version__, agy, benefits, media, stitch
 from .config import Settings, load_env_file
 
 INSTRUCTIONS = """\
-Tools for Google's Gemini, in three groups:
+Tools for everything a Google AI Pro plan includes. google_pro_benefits lists each
+benefit and the tool that reaches it; start there when unsure.
 
 - gemini_ask, gemini_research, gemini_models: Gemini through the Antigravity CLI on
   the user's Google AI Pro subscription. No API cost; good for second opinions,
@@ -26,8 +27,11 @@ Tools for Google's Gemini, in three groups:
   - flow_generate talks to Flow's agent (videos, images, edits, extensions, characters);
   - flow_tools / flow_open_tool use any Flow tool (Image Editor, Video Resizer,
     Transition Machine, Type Overlays, community tools...);
-  - flow_page / flow_act operate any Flow page or tool like a person (Characters,
-    Scenes, Library, uploads, upscaling); flow_collect downloads results.
+  - flow_collect downloads results.
+- gemini_app (Gemini app: 4 Argon, Deep Research, images, Veo videos, music,
+  Canvas, files), gemini_app_result, google_ai_mode (AI Mode in Search), and
+  google_page / google_act, which read and operate ANY Google AI site like a person:
+  Flow, Gemini Notebooks, AI Studio, Jules, Colab, Flow Music, Docs/Drive.
 
 {spending}
 
@@ -53,9 +57,13 @@ def build_server(settings: Settings | None = None) -> MCPServer:
     media.register(server, settings)
     stitch.register(server, settings)
     if settings.flow_enabled:
+        from . import google_web
         from .flow import tools as flow_tools
 
         flow_tools.register(server, settings)
+        google_web.register(server, settings)
+    else:
+        benefits.register(server)
     return server
 
 

@@ -14,6 +14,7 @@ BASE = {
     "video_check",
     "image_generate",
     "video_stitch",
+    "google_pro_benefits",
 }
 FLOW = {
     "flow_status",
@@ -25,9 +26,38 @@ FLOW = {
     "flow_job",
     "flow_tools",
     "flow_open_tool",
-    "flow_page",
-    "flow_act",
+    "google_page",
+    "google_act",
+    "gemini_app",
+    "gemini_app_result",
+    "google_ai_mode",
 }
+
+
+def test_only_google_ai_sites_are_opened():
+    from gemini_pro_mcp.google_web import check_url
+
+    assert check_url("https://gemini.google.com/app", operate=True) == "gemini.google.com"
+    assert check_url("https://one.google.com/ai", operate=False) == "one.google.com"
+    for url, operate in [
+        ("https://one.google.com/ai/credits", True),  # purchases are never automated
+        ("https://accounts.google.com/signin", False),
+        ("https://mail.google.com/", True),
+        ("https://example.com/", False),
+    ]:
+        try:
+            check_url(url, operate=operate)
+        except FlowError:
+            continue
+        raise AssertionError(f"{url} should be refused")
+
+
+def test_benefits_cover_the_plan():
+    from gemini_pro_mcp import benefits
+
+    text = benefits.as_text()
+    for name in ("Deep Research", "Flow", "Notebook", "Antigravity", "Jules", "AI Studio"):
+        assert name in text
 
 
 async def tool_names(settings):
