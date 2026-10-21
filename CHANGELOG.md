@@ -6,3 +6,8 @@
 - `video_generate`, `video_edit` and `video_check` use Gemini Omni Flash through the Gemini API.
 - `image_generate` creates and edits images with Nano Banana 2.1, 2 Lite and Pro.
 - Experimental Flow tools: `flow_generate`, `flow_approve`, `flow_reject`, `flow_collect` and `flow_status`. They drive flow.google.com in your own signed-in Chrome profile (`flow-login`), and spending credits always takes a separate `flow_approve` call.
+- `flow_make_video` and `flow_job` make a video of any length: Gemini writes a shot list, Flow generates each clip, and the clips are joined into one file.
+- `video_stitch` joins clips locally with a bundled ffmpeg.
+- `GEMINI_PRO_AUTO_APPROVE=1` is for users who pre-approve spending.
+- Every Flow feature is now reachable: `flow_tools` and `flow_open_tool` open any Flow tool, and `flow_page` and `flow_act` read and operate any Flow page or tool frame, including clicks, typing, uploads and downloads.
+- `flow_make_video` is more reliable: it saves its shot plan to `plan.json` and resumes from the clips already made. A failed clip is retried up to 3 times; Flow does not charge for failures.

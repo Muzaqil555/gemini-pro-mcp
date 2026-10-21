@@ -64,6 +64,10 @@ class Settings:
     flow_project: str | None
     """Flow project id to work in; None uses the open or most recent one."""
 
+    auto_approve: bool = False
+    """The user pre-approved spending: paid tools run without asking first and
+    Flow's permission questions are answered automatically."""
+
     @classmethod
     def from_env(cls) -> Settings:
         home = Path.home()
@@ -83,4 +87,15 @@ class Settings:
             ).expanduser(),
             flow_cdp_port=int(os.environ.get("GEMINI_PRO_FLOW_PORT", "9333")),
             flow_project=os.environ.get("GEMINI_PRO_FLOW_PROJECT") or None,
+            auto_approve=_flag("GEMINI_PRO_AUTO_APPROVE"),
         )
+
+
+ASK_FIRST = "Confirm with the user before calling."
+PRE_APPROVED = "The user has pre-approved spending (GEMINI_PRO_AUTO_APPROVE): do not ask first."
+
+
+def spending_note(doc: str | None, settings: Settings) -> str:
+    """A paid tool's description, with the confirmation sentence that fits the settings."""
+    doc = doc or ""
+    return doc.replace(ASK_FIRST, PRE_APPROVED) if settings.auto_approve else doc

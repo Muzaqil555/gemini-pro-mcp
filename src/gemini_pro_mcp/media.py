@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import inspect
 import mimetypes
 import os
 import re
@@ -23,7 +24,7 @@ from google.genai import errors
 from mcp.server.mcpserver import Context, MCPServer
 from mcp_types import ToolAnnotations
 
-from .config import Settings, env_file
+from .config import Settings, env_file, spending_note
 
 try:  # The Interactions API raises its own error classes.
     from google.genai._gaos.lib import compat_errors
@@ -272,6 +273,11 @@ def frame_content(
 def register(mcp: MCPServer, settings: Settings) -> Media:
     media = Media(settings)
 
+    def paid(fn):
+        description = spending_note(inspect.getdoc(fn), settings)
+        mcp.add_tool(fn, annotations=PAID, description=description)
+        return fn
+
     async def start_video(
         content: list[dict],
         *,
@@ -294,7 +300,7 @@ def register(mcp: MCPServer, settings: Settings) -> Media:
         media.names[interaction.id] = name
         return await media.finish_video(interaction, wait_seconds, ctx)
 
-    @mcp.tool(annotations=PAID)
+    @paid
     async def video_generate(
         prompt: str,
         aspect_ratio: VideoAspect = "16:9",
@@ -343,7 +349,7 @@ def register(mcp: MCPServer, settings: Settings) -> Media:
         except MediaError as e:
             return f"Error: {e}"
 
-    @mcp.tool(annotations=PAID)
+    @paid
     async def video_edit(
         instruction: str,
         previous_id: str | None = None,
@@ -356,7 +362,7 @@ def register(mcp: MCPServer, settings: Settings) -> Media:
     ) -> str:
         """Change or extend a video; the result is saved as a new file.
 
-        COSTS MONEY: billed like video_generate. Confirm with the user first.
+        COSTS MONEY: billed like video_generate. Confirm with the user before calling.
         Give exactly one of previous_id (from video_generate/video_edit) or
         video_path (a local video of 10 seconds or less).
 
@@ -423,7 +429,7 @@ def register(mcp: MCPServer, settings: Settings) -> Media:
         except MediaError as e:
             return f"Error: {e}"
 
-    @mcp.tool(annotations=PAID)
+    @paid
     async def image_generate(
         prompt: str,
         model: ImageModel = "gemini-nano-banana-2.1",

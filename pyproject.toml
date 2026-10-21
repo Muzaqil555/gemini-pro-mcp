@@ -36,7 +36,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-flow = ["playwright>=1.50"]
+flow = ["playwright>=1.50", "imageio-ffmpeg>=0.6"]
 
 [project.scripts]
 gemini-pro-mcp = "gemini_pro_mcp.server:main"

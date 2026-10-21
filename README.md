@@ -11,8 +11,8 @@ One MCP server, three ways into Google's AI:
 | Group | Tools | Runs on | Cost |
 |---|---|---|---|
 | **Gemini (subscription)** | `gemini_ask`, `gemini_research`, `gemini_models` | [Antigravity CLI](https://antigravity.google) signed in with your Google AI Pro/Ultra account | Free: uses your plan's limits |
-| **Media (Gemini API)** | `video_generate`, `video_edit`, `video_check`, `image_generate` | Official Gemini API: Omni Flash video, Nano Banana images | Paid per use (AI Pro's monthly Cloud credit can cover it) |
-| **Flow** *(experimental)* | `flow_generate`, `flow_approve`, `flow_reject`, `flow_collect`, `flow_status` | Your own signed-in Chrome at flow.google.com | Your plan's monthly Flow credits (e.g. 12 credits for an 8 s video) |
+| **Media (Gemini API)** | `video_generate`, `video_edit`, `video_check`, `image_generate`, `video_stitch` | Official Gemini API: Omni Flash video, Nano Banana images | Paid per use (AI Pro's monthly Cloud credit can cover it) |
+| **Flow** *(experimental)* | `flow_make_video`, `flow_job`, `flow_generate`, `flow_approve`, `flow_reject`, `flow_collect`, `flow_status`, `flow_tools`, `flow_open_tool`, `flow_page`, `flow_act`: **every Flow feature and tool** | Your own signed-in Chrome at flow.google.com | Your plan's monthly Flow credits (e.g. 12 credits for an 8 s video) |
 
 Ask Claude things like:
 
@@ -20,7 +20,7 @@ Ask Claude things like:
 > *"Research what changed in Flutter 3.47, with sources."*
 > *"Make an 8-second vertical video of a red tram crossing Baku at sunset."*
 > *"Turn this logo sketch (`./sketch.png`) into a clean flat icon, 2K."*
-> *"Use my Flow credits for a 9:16 clip of a cat surfing, show me the cost first."*
+> *"Make a 2 minute video of a fox's journey through a snowy forest with my Flow credits."*
 
 ## Quick start
 
@@ -81,6 +81,7 @@ Every request runs `agy --print` in **plan mode with the sandbox on**, so Gemini
 | `video_edit` | Edit a previous result (`previous_id`) or a local clip of 10 s or less, or extend it, up to 40 s in total. |
 | `video_check` | Fetches a video that was still rendering. Free. |
 | `image_generate` | Create or edit images with Nano Banana 2.1, Nano Banana 2 Lite or Nano Banana Pro, at 1K, 2K or 4K. |
+| `video_stitch` | Joins clips into one MP4, locally and for free (bundled ffmpeg, `flow` extra). |
 
 Files are saved to `~/gemini-pro-output` (change it with `GEMINI_PRO_OUTPUT_DIR`).
 
@@ -99,7 +100,7 @@ Prices are taken from [Google's pricing page](https://ai.google.dev/gemini-api/d
 
 **Does Google AI Pro pay for the API?** Not directly. Google says plan benefits apply in the AI Studio web UI, and API-key usage is billed separately. AI Pro does include a monthly Google Cloud credit through the Google Developer Program, which can be spent on the Gemini API once billing is enabled. Google's blog gives the amount as $10/month.
 
-The server tells the model to **confirm with you before every paid call**.
+By default the server tells the model to **confirm with you before every paid call**. If you would rather not be asked, set `GEMINI_PRO_AUTO_APPROVE=1`: the model then just does it and reports the cost afterwards.
 
 ## Configuration
 
@@ -112,6 +113,7 @@ The server tells the model to **confirm with you before every paid call**.
 | `GEMINI_PRO_AGY_TIMEOUT` | `600` | Seconds per Antigravity request |
 | `GEMINI_PRO_ENABLE_FLOW` | off | `1` registers the experimental Flow tools |
 | `GEMINI_PRO_FLOW_PROJECT` | open or most recent project | Flow project id to work in |
+| `GEMINI_PRO_AUTO_APPROVE` | off | `1` = spending is pre-approved: no confirmation questions, Flow requests are approved automatically |
 | `GEMINI_PRO_ENV_FILE` | `~/.config/gemini-pro-mcp/.env` | Optional file with any of the above |
 
 ## Flow (experimental)
@@ -126,13 +128,20 @@ Then set `GEMINI_PRO_ENABLE_FLOW=1`.
 
 | Tool | What it does | Credits |
 |---|---|---|
+| `flow_make_video` | **Any length** (e.g. `duration_seconds=120`). Gemini splits the idea into 4–8 s shots with matching descriptions, Flow generates each one, and the clips are joined into one MP4. Runs in the background. | ~12 per 8 s |
+| `flow_job` | Progress of `flow_make_video`: clips done, credits used, final file | none |
 | `flow_generate` | Sends your request to Flow's agent and returns its answer, including the cost question (*"…1 video generation, costing 12 credits?"*) | none |
 | `flow_approve` | Answers that question with Approve, waits for the result and saves it (720p MP4 / original image) | **spends credits** |
 | `flow_reject` | Declines the pending request | none |
 | `flow_collect` | Downloads the newest items of the project | none |
 | `flow_status` | Checks the sign-in and shows the credits left | none |
+| `flow_tools` | Lists every Flow tool: Google's (Image Editor, Mockup, Shot Explorer, Mask Magic, Video Resizer, Transition Machine, Type Overlays, Shader Effects, Poster Designer…), the community's and your own | none |
+| `flow_open_tool` | Opens a tool by name and shows its interface (a Google or community tool becomes your own "Remix of …" copy, as in Flow) | none |
+| `flow_page` / `flow_act` | Read any Flow page or tool as numbered elements, then click, type, upload files, pick options or export, like a person. This reaches whatever has no dedicated tool: Characters, Scenes, Library, upscaling, each tool's controls | depends on the button |
 
-Spending is always a **separate call**: `flow_generate` stops at Flow's own permission question, so the model has to ask you before it calls `flow_approve`. Keep Flow's *"Confirm before generating: Always"* setting on (the default).
+**Every Flow feature is reachable.** Flow's agent (`flow_generate`) handles anything you can ask in words, and `flow_page` + `flow_act` operate anything with buttons. For example, *"put my last clip through Video Resizer at 9:16"* opens the tool, imports the clip, exports a 9:16 copy and downloads it. That flow was tested end to end.
+
+By default spending is a **separate call**: `flow_generate` stops at Flow's own permission question, and the model has to ask you before it calls `flow_approve`. With `GEMINI_PRO_AUTO_APPROVE=1` the tools approve it themselves. Either way, keep Flow's *"Confirm before generating: Always"* setting on (the default), because the tools rely on that question.
 
 Tested on 2026-10-21 with Omni 1.1 Flash: an 8 s, 1280×720, 24 fps video for 12 credits, end to end.
 
@@ -149,7 +158,8 @@ Claude ── MCP (stdio) ──> gemini-pro-mcp ──┬── agy --print (pl
 ## Roadmap
 
 - [x] Flow: generate, approve and download videos with plan credits
-- [ ] Flow: images, scenes (longer videos from several clips), characters
+- [x] Flow: videos of any length (`flow_make_video`)
+- [ ] Flow: images, characters, smoother shot transitions (extend instead of separate clips)
 - [ ] Music generation (Lyria)
 - [ ] Publish to PyPI (`uvx gemini-pro-mcp`)
 - [ ] Deep Research reports
