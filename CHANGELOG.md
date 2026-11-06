@@ -20,3 +20,5 @@
 - Fixed: when Flow queues a clip at busy times, `flow_make_video` now waits for the clip it already paid for instead of generating it again.
 - Fixed: `flow_status` timed out after Flow put the Google account bar inside its plan badge. It now clicks the plan chip itself, and an unreadable balance shows as "unknown" instead of failing the check.
 - Setup instructions for Codex, the Antigravity CLI and the Gemini CLI.
+- `gemini-pro-mcp setup` adds the server to every MCP client it finds (Claude Code, Codex, Antigravity CLI, Gemini CLI). It uses each client's `mcp add` command where there is one, and otherwise edits the config file, keeping everything else in it and saving a backup. `--browser` and `--auto-approve` set the matching settings.
+- `gemini-pro-mcp doctor` checks the Antigravity sign-in, the API keys, Chrome and the Flow profile, and says how to fix each problem it finds. With `--flow` it also opens Flow and reads the credits.

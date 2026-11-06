@@ -7,7 +7,7 @@ import sys
 
 from mcp.server.mcpserver import MCPServer
 
-from . import __version__, agy, benefits, jules, media, stitch
+from . import __version__, agy, benefits, install, jules, media, stitch
 from .config import Settings, load_env_file
 
 INSTRUCTIONS = """\
@@ -86,6 +86,31 @@ def main(argv: list[str] | None = None) -> None:
         "flow-login",
         help="open the Chrome profile used by the Flow tools so you can sign in",
     )
+    doctor = sub.add_parser("doctor", help="check what works and how to fix the rest")
+    doctor.add_argument(
+        "--flow", action="store_true", help="also open Flow and check the sign-in and credits"
+    )
+    setup = sub.add_parser(
+        "setup", help="add the server to Claude Code, Codex, Antigravity and Gemini CLI"
+    )
+    setup.add_argument(
+        "--client",
+        action="append",
+        choices=install.CLIENTS,
+        help="only this client (repeatable); default: every one that is installed",
+    )
+    setup.add_argument(
+        "--browser",
+        action="store_true",
+        help="enable the browser tools (Flow, Gemini app, AI Mode, Notebooks)",
+    )
+    setup.add_argument(
+        "--auto-approve",
+        action="store_true",
+        help="pre-approve spending: paid tools run without asking first",
+    )
+    setup.add_argument("--name", default=install.DEFAULT_NAME, help="server name in the clients")
+    setup.add_argument("--dry-run", action="store_true", help="show what would change")
     args = parser.parse_args(argv)
 
     load_env_file()
@@ -93,6 +118,19 @@ def main(argv: list[str] | None = None) -> None:
         from .flow.browser import login
 
         sys.exit(login(Settings.from_env()))
+    if args.command == "doctor":
+        sys.exit(install.doctor(Settings.from_env(), live_flow=args.flow))
+    if args.command == "setup":
+        sys.exit(
+            install.setup(
+                Settings.from_env(),
+                clients=args.client or list(install.CLIENTS),
+                name=args.name,
+                browser=args.browser,
+                auto_approve=args.auto_approve,
+                dry_run=args.dry_run,
+            )
+        )
     build_server().run()
 
 

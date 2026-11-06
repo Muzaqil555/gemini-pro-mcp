@@ -31,7 +31,25 @@ Ask Claude things like:
 - For the **Gemini tools**: install the [Antigravity CLI](https://antigravity.google), run `agy` once and sign in with your Google AI Pro/Ultra account.
 - For the **media tools**: an API key from [Google AI Studio](https://aistudio.google.com/apikey) with billing enabled. See [Costs](#costs).
 
-### 2. Add it to your client
+### 2. Add it to your clients (one command)
+
+```bash
+uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp setup
+```
+
+`setup` finds Claude Code, Codex, the Antigravity CLI and the Gemini CLI on your computer, adds the server to each one, and then checks what works: the Antigravity sign-in, your API keys, Chrome and the Flow profile. Each item it reports as missing comes with the fix. Restart the clients afterwards.
+
+- `--browser` also enables the Flow, Gemini app, AI Mode and Notebook tools. Run `gemini-pro-mcp flow-login` once afterwards and sign in to Google in the window that opens.
+- `--auto-approve` pre-approves spending, so paid tools run without asking first.
+- `--client codex` (repeatable) sets up only the clients you name. `--dry-run` shows the changes without making them.
+
+Edited config files are backed up next to themselves (`config.toml.bak`, `settings.json.bak`). To check things again later, without changing anything:
+
+```bash
+uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp doctor --flow
+```
+
+To add the server by hand instead, use the client's own command:
 
 **Claude Code**
 
