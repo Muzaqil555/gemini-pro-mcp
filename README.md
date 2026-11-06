@@ -14,6 +14,8 @@
 uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp setup
 ```
 
+If it saves you an API bill or a tab switch, a ⭐ helps other AI Pro users find it.
+
 ## Why use it
 
 - **No extra bill for Gemini.** `gemini_ask`, `gemini_research` and `gemini_code` run on your AI Pro plan's limits through the Antigravity CLI, not on a pay-per-token API key.

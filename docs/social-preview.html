@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- Source of docs/social-preview.png (1280x640), the image GitHub shows when
+     the repo link is shared. Rebuild: python docs/make_social_preview.py -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 1280px; height: 640px; }
+  body {
+    background: radial-gradient(1200px 600px at 85% -10%, #1f3b73 0%, transparent 60%),
+                radial-gradient(900px 500px at -10% 110%, #3b1f5e 0%, transparent 60%), #0d1117;
+    color: #e6edf3; font-family: "Segoe UI", Inter, system-ui, sans-serif;
+    display: flex; flex-direction: column; justify-content: center; padding: 0 88px;
+    box-sizing: border-box;
+  }
+  .tag { font: 600 22px ui-monospace, Consolas, monospace; color: #8b949e; letter-spacing: .5px; }
+  h1 { font-size: 84px; margin: 14px 0 10px; letter-spacing: -2px; }
+  h1 span { background: linear-gradient(90deg, #4285f4, #9b72cb, #d96570);
+            -webkit-background-clip: text; color: transparent; }
+  p { font-size: 34px; line-height: 1.3; color: #c9d1d9; margin: 0 0 34px; max-width: 1050px; }
+  .chips { display: flex; gap: 14px; flex-wrap: wrap; }
+  .chip { font-size: 24px; padding: 10px 20px; border-radius: 999px; background: #161b22;
+          border: 1px solid #30363d; color: #e6edf3; }
+  .cmd { margin-top: 38px; font: 24px ui-monospace, Consolas, monospace; color: #58a6ff; }
+</style>
+</head>
+<body>
+  <div class="tag">MCP server · open source · MIT</div>
+  <h1><span>gemini-pro-mcp</span></h1>
+  <p>Your Google AI Pro plan, inside Claude, Codex and Gemini CLI.</p>
+  <div class="chips">
+    <div class="chip">Gemini 4 Argon, no API bill</div>
+    <div class="chip">Deep Research</div>
+    <div class="chip">Flow videos</div>
+    <div class="chip">Notebooks</div>
+    <div class="chip">Jules</div>
+  </div>
+  <div class="cmd">$ uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp setup</div>
+</body>
+</html>
