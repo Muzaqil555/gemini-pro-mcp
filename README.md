@@ -1,27 +1,44 @@
 # gemini-pro-mcp
 
-**Use everything in the Google AI Pro subscription you already pay for from Claude, or any other MCP client: the Gemini app, Deep Research, Flow, AI Mode, Gemini Notebooks, AI Studio, Jules and more.**
+**Your Google AI Pro subscription, inside Claude, Codex and the Gemini CLI.** Gemini 4 Argon, Deep Research, Flow videos, Gemini Notebooks, Jules and the rest of the plan you already pay for, as up to 36 MCP tools. One command sets it up.
 
 [![CI](https://github.com/Muzaqil555/gemini-pro-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Muzaqil555/gemini-pro-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+![MCP](https://img.shields.io/badge/MCP-server-8A2BE2)
+![Works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Codex%20%C2%B7%20Antigravity%20%C2%B7%20Gemini%20CLI-555)
 
-One MCP server, four ways into Google's AI:
+<p align="center"><img src="docs/demo.svg" alt="Demo: doctor checks the setup, Claude asks Gemini for a code review on the AI Pro plan, then reads the Flow credits left" width="900"></p>
 
-| Group | Tools | Runs on | Cost |
-|---|---|---|---|
-| **Gemini (subscription)** | `gemini_ask`, `gemini_research`, `gemini_models` | [Antigravity CLI](https://antigravity.google) signed in with your Google AI Pro/Ultra account | Free: uses your plan's limits |
-| **Media (Gemini API)** | `video_generate`, `video_edit`, `video_check`, `image_generate`, `video_stitch` | Official Gemini API: Omni Flash video, Nano Banana images | Paid per use (AI Pro's monthly Cloud credit can cover it) |
-| **Google AI web apps** *(experimental)* | `gemini_app`, `gemini_app_result`, `google_ai_mode`, `google_page`, `google_act`, `google_pro_benefits` | Your own signed-in Chrome: Gemini app, Notebooks, AI Mode, AI Studio, Jules, Colab, Flow Music, Docs | Your plan's limits |
-| **Flow** *(experimental)* | `flow_make_video`, `flow_job`, `flow_generate`, `flow_approve`, `flow_reject`, `flow_collect`, `flow_status`, `flow_tools`, `flow_open_tool`, `flow_page`, `flow_act`: **every Flow feature and tool** | Your own signed-in Chrome at flow.google.com | Your plan's monthly Flow credits (e.g. 12 credits for an 8 s video) |
+```bash
+uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp setup
+```
 
-Ask Claude things like:
+## Why use it
+
+- **No extra bill for Gemini.** `gemini_ask`, `gemini_research` and `gemini_code` run on your AI Pro plan's limits through the Antigravity CLI, not on a pay-per-token API key.
+- **The whole plan, not just chat.** The tools reach Deep Research, Flow (any-length videos and every Flow tool), Gemini Notebooks (Audio Overviews, quizzes, slides), AI Mode, Jules and the Gemini app. `google_pro_benefits` lists each benefit and the tool that reaches it.
+- **A second brain for your coding agent.** Claude or Codex can ask Gemini for a review, a sourced web search or a delegated edit without leaving the session.
+- **Set up in one command, checked in one more.** `setup` adds the server to every client it finds. `doctor` checks what works and tells you how to fix what does not.
+- **Safe by default.** Gemini reads in a sandbox and cannot change files unless you call `gemini_code`. Paid calls ask you first. The browser tools are off until you turn them on, and the server never sees or types your Google password.
+
+Ask your agent things like:
 
 > *"Get a second opinion from Gemini on `src/auth.py`."*
 > *"Research what changed in Flutter 3.47, with sources."*
-> *"Make an 8-second vertical video of a red tram crossing Baku at sunset."*
-> *"Turn this logo sketch (`./sketch.png`) into a clean flat icon, 2K."*
 > *"Make a 2 minute video of a fox's journey through a snowy forest with my Flow credits."*
+> *"Put these three PDFs in a Gemini Notebook and make an Audio Overview."*
+> *"Turn this logo sketch (`./sketch.png`) into a clean flat icon, 2K."*
+
+One MCP server, five ways into Google's AI:
+
+| Group | Tools | Runs on | Cost |
+|---|---|---|---|
+| **Gemini (subscription)** | `gemini_ask`, `gemini_research`, `gemini_code`, `gemini_agents`, `gemini_models` | [Antigravity CLI](https://antigravity.google) signed in with your Google AI Pro/Ultra account | Free: uses your plan's limits |
+| **Jules** | `jules_start`, `jules_status`, `jules_approve_plan`, `jules_message`, `jules_sources`, `jules_sessions` | Official Jules API (`JULES_API_KEY`) | Your plan's Jules limits |
+| **Media (Gemini API)** | `video_generate`, `video_edit`, `video_check`, `image_generate`, `video_stitch` | Official Gemini API: Omni Flash video, Nano Banana images | Paid per use (AI Pro's monthly Cloud credit can cover it) |
+| **Google AI web apps** *(experimental)* | `gemini_app`, `gemini_app_result`, `google_ai_mode`, `notebook_*`, `google_page`, `google_act`, `google_pro_benefits` | Your own signed-in Chrome: Gemini app, Notebooks, AI Mode, AI Studio, Colab, Flow Music, Docs | Your plan's limits |
+| **Flow** *(experimental)* | `flow_make_video`, `flow_job`, `flow_generate`, `flow_approve`, `flow_reject`, `flow_collect`, `flow_status`, `flow_tools`, `flow_open_tool`: **every Flow feature and tool** | Your own signed-in Chrome at flow.google.com | Your plan's monthly Flow credits (e.g. 12 credits for an 8 s video) |
 
 ## Quick start
 
@@ -230,7 +247,8 @@ Claude ── MCP (stdio) ──> gemini-pro-mcp ──┬── agy --print (pl
 - [ ] Music generation (Lyria)
 - [ ] Publish to PyPI (`uvx gemini-pro-mcp`)
 - [ ] Deep Research reports
-- [ ] Demo GIF
+- [x] Animated demo (`docs/demo.svg`, built by `docs/make_demo.py` from real output)
+- [x] One-command setup for Claude Code, Codex, Antigravity CLI and Gemini CLI
 
 Ideas and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
