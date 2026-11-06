@@ -22,3 +22,19 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -q
+
+  # The image MCP directories (Glama) run: it must start and answer tools/list.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t gemini-pro-mcp .
+      - name: Server starts and lists its tools
+        run: |
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
+            '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+            | (cat; sleep 15) | timeout 90 docker run -i --rm gemini-pro-mcp > out.jsonl || true
+          cat out.jsonl
+          grep -q '"gemini_ask"' out.jsonl
