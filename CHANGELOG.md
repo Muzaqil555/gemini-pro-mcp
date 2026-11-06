@@ -18,3 +18,5 @@
 - Jules: `jules_sources`, `jules_start`, `jules_status`, `jules_sessions`, `jules_approve_plan` and `jules_message` use the official REST API (`JULES_API_KEY`).
 - Fixed: concurrent browser connections reset Chrome's download handling and left 0-byte clips. The server now shares one connection, checks every download and falls back to the signed file URL.
 - Fixed: when Flow queues a clip at busy times, `flow_make_video` now waits for the clip it already paid for instead of generating it again.
+- Fixed: `flow_status` timed out after Flow put the Google account bar inside its plan badge. It now clicks the plan chip itself, and an unreadable balance shows as "unknown" instead of failing the check.
+- Setup instructions for Codex, the Antigravity CLI and the Gemini CLI.

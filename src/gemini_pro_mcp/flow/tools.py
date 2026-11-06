@@ -44,7 +44,10 @@ BUBBLE = "flow-chat-bubble"
 PERMISSION = "flow-permission-message"
 PERMISSION_OPTION = f'{PERMISSION} [role="radio"]'
 PROJECT_LINK = 'a[href^="/project/"]'
-ACCOUNT_BUTTON = 'div[role="button"]:has-text("PRO"), div[role="button"]:has-text("ULTRA")'
+# The plan chip ("PRO"/"ULTRA") opens the account panel. Since November 2026
+# its button also holds the Google account bar, so clicking the button's centre
+# lands on the avatar; click the chip itself.
+ACCOUNT_BUTTON = 'flow-user-tier-chip, [aria-label="Account details"]'
 ACCOUNT_CLOSE = 'button[aria-label="Close account panel"]'
 
 # The project's media grid, in Flow's order (newest first). Thumbnail URLs
@@ -351,13 +354,19 @@ class Flow:
         return groups
 
     async def credits(self) -> str | None:
+        """The credit balance from the account panel, or None if it cannot be read."""
         page = self.page
-        await page.locator(ACCOUNT_BUTTON).first.click()
+        try:
+            await page.locator(ACCOUNT_BUTTON).first.click(timeout=10_000)
+        except Exception:
+            return None  # the badge moved again; Flow itself still works
         try:
             panel = page.get_by_text(re.compile(r"[\d,.]+\s+Google Flow credits"))
             await panel.first.wait_for(timeout=10_000)
             match = re.search(r"([\d,.]+)\s+Google Flow credits", await panel.first.inner_text())
             return match.group(1) if match else None
+        except Exception:
+            return None
         finally:
             await self.close_account_panel()
 

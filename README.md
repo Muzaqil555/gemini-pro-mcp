@@ -39,6 +39,31 @@ Ask Claude things like:
 claude mcp add gemini-pro --scope user -- uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp
 ```
 
+**Codex**
+
+```bash
+codex mcp add gemini-pro -- uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp
+```
+
+Or in `~/.codex/config.toml`. Raise the tool timeout: Flow and Deep Research calls take minutes, longer than Codex's default.
+
+```toml
+[mcp_servers.gemini-pro]
+command = "uvx"
+args = ["--from", "git+https://github.com/Muzaqil555/gemini-pro-mcp", "gemini-pro-mcp"]
+startup_timeout_sec = 60
+tool_timeout_sec = 900
+```
+
+**Antigravity CLI and Gemini CLI**
+
+```bash
+agy mcp add gemini-pro -- uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp
+gemini mcp add gemini-pro uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp
+```
+
+Settings go in as environment variables, e.g. `agy mcp add --env GEMINI_PRO_ENABLE_BROWSER=1 gemini-pro -- ...`, or in the `.env` file below.
+
 **Claude Desktop, Cursor, Windsurf and other clients.** Add this to the client's MCP config:
 
 ```json
