@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.1
+
+- Clearer tool descriptions for `gemini_ask`, `video_stitch`, `google_pro_benefits` and the `jules_*` tools: when to use each one, what it costs and what it returns.
+- `setup` and `doctor` commands, translations (Turkish, Russian, Azerbaijani), a comparison with other Gemini MCP servers, a Dockerfile, a Code of Conduct and a security policy.
+- Dependabot and CodeQL code scanning.
+
+## 0.1.0
 
 - `gemini_ask`, `gemini_research` and `gemini_models` run Gemini through the Antigravity CLI on your Google AI Pro/Ultra plan, read-only and sandboxed.
 - `video_generate`, `video_edit` and `video_check` use Gemini Omni Flash through the Gemini API.

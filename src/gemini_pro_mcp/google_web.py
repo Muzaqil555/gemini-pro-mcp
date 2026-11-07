@@ -197,11 +197,13 @@ async def wait_for_answer(page, before: int, timeout: float) -> dict:
 def register(mcp: MCPServer, settings: Settings) -> None:
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def google_pro_benefits() -> str:
-        """Everything a Google AI Pro plan includes, and which tool of this server
-        reaches each part (or why it cannot). Free; start here when unsure.
+        """List everything a Google AI Pro plan includes and which tool of this
+        server reaches each part, or why a part cannot be reached (mobile-only,
+        US-only, purchases). Read-only, free and offline. Call it first when the
+        user asks what their plan can do or which tool to use.
 
         Returns:
-            One entry per benefit: what it is, where it lives, how to use it here.
+            One entry per benefit: what it is, where it lives, and how to use it here.
         """
         return benefits.as_text()
 

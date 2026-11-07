@@ -1,6 +1,6 @@
 [project]
 name = "gemini-pro-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server that brings your Google AI Pro subscription (Gemini via Antigravity CLI, Flow) and the Gemini API (Omni video, Nano Banana images) to Claude and other MCP clients."
 readme = "README.md"
 license = "MIT"

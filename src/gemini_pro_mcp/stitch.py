@@ -97,14 +97,19 @@ async def stitch(clips: list[Path], output: Path) -> Path:
 def register(mcp: MCPServer, settings: Settings) -> None:
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False))
     async def video_stitch(clips: list[str], file_name: str = "stitched") -> str:
-        """Join video clips, in the given order, into one .mp4. Local and free.
+        """Join local video clips, in the given order, into one .mp4 with ffmpeg.
+        Runs on this computer and costs nothing. Clips with the same format (e.g.
+        all from video_generate or Flow) are joined losslessly; mixed formats are
+        re-encoded to H.264/AAC. Use it to combine clips made by video_generate,
+        video_edit or flow_collect; flow_make_video already joins its own clips.
 
         Args:
-            clips: Paths of the clips, first to last.
-            file_name: Name of the joined file (saved in the output folder).
+            clips: Paths of the clips, first to last (at least one).
+            file_name: Name for the joined file, saved in GEMINI_PRO_OUTPUT_DIR; a
+                number is added if it already exists.
 
         Returns:
-            The path of the joined video.
+            "Saved: <path>" with the joined video, or an error such as a missing clip.
         """
         try:
             path = unique_path(settings.output_dir, Path(file_name).stem, ".mp4")

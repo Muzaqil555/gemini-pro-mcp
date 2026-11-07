@@ -142,15 +142,22 @@ def register(mcp: MCPServer, settings: Settings) -> None:
 
     @mcp.tool(annotations=read)
     async def jules_status(session: str, activities: int = 15) -> str:
-        """State of a Jules session: latest activities (plan, progress, completion)
-        and any pull request it opened. Free.
+        """Check on a Jules session started with jules_start: its state, its most
+        recent activities (plan, progress messages, questions, completion) and the
+        pull request it opened, if any. Read-only and free; call it again to poll a
+        session that is still working.
+
+        Use jules_sessions to find a session id, jules_approve_plan when the state
+        says it awaits plan approval, and jules_message to answer a question.
 
         Args:
-            session: Session id from jules_start or jules_sessions.
-            activities: How many recent activities to show.
+            session: Session id from jules_start or jules_sessions, or its full
+                "sessions/<id>" name or web link.
+            activities: How many of the latest activities to show (default 15).
 
         Returns:
-            State, recent activities and outputs (PR links).
+            The session title and state, any pull request links, and one line per
+            recent activity with its time, kind and text.
         """
         try:
             sid = session_id(session)
@@ -174,13 +181,19 @@ def register(mcp: MCPServer, settings: Settings) -> None:
 
     @mcp.tool(annotations=read)
     async def jules_sessions(limit: int = 10) -> str:
-        """List recent Jules sessions. Free.
+        """List the user's most recent Jules sessions, newest first, to find a
+        session id or see which tasks are still running. Read-only and free.
+
+        Pass an id from the result to jules_status for details, to
+        jules_approve_plan or to jules_message.
 
         Args:
-            limit: How many to list.
+            limit: How many sessions to list (default 10).
 
         Returns:
-            One line per session: id, state and title.
+            One line per session: id, state (as Jules reports it, for example in
+            progress, awaiting plan approval or completed) and title, or
+            "No sessions yet."
         """
         try:
             data = await call("GET", "sessions", params={"pageSize": limit})
@@ -194,13 +207,17 @@ def register(mcp: MCPServer, settings: Settings) -> None:
 
     @mcp.tool(annotations=write)
     async def jules_approve_plan(session: str) -> str:
-        """Approve the plan of a Jules session that waits for approval.
+        """Approve the plan Jules proposed, so it starts writing code. Only for a
+        session started with jules_start(require_plan_approval=True) whose state is
+        awaiting plan approval; read the plan with jules_status first and show it
+        to the user. To change the plan instead, send feedback with jules_message.
 
         Args:
-            session: Session id.
+            session: Session id from jules_start or jules_sessions.
 
         Returns:
-            Confirmation.
+            A confirmation that Jules is working, or an error such as the session
+            not waiting for approval. Follow progress with jules_status.
         """
         try:
             await call("POST", f"sessions/{session_id(session)}:approvePlan", {})
@@ -210,14 +227,17 @@ def register(mcp: MCPServer, settings: Settings) -> None:
 
     @mcp.tool(annotations=write)
     async def jules_message(session: str, message: str) -> str:
-        """Send Jules a message in a session (answer its question, give feedback).
+        """Send a message to Jules inside an existing session: answer a question it
+        asked, give feedback on its plan or code, or ask for a change. Jules
+        replies asynchronously, so read the answer later with jules_status. To give
+        Jules a new task, use jules_start instead.
 
         Args:
-            session: Session id.
-            message: The message.
+            session: Session id from jules_start or jules_sessions.
+            message: What to tell Jules, in plain language.
 
         Returns:
-            Confirmation; follow up with jules_status.
+            A confirmation that the message was sent, or an error.
         """
         try:
             await call("POST", f"sessions/{session_id(session)}:sendMessage", {"prompt": message})

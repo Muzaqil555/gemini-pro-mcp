@@ -150,10 +150,15 @@ def as_text() -> str:
 def register(mcp) -> None:
     @mcp.tool()
     async def google_pro_benefits() -> str:
-        """Everything a Google AI Pro plan includes, and which tool of this server
-        reaches each part. Free. Browser-based tools need GEMINI_PRO_ENABLE_BROWSER=1.
+        """List everything a Google AI Pro plan includes and which tool of this
+        server reaches each part, or why a part cannot be reached (mobile-only,
+        US-only, purchases). Read-only, free and offline. Call it first when the
+        user asks what their plan can do or which tool to use.
+
+        The browser-based tools it names (Flow, Gemini app, Notebooks, AI Mode)
+        appear only when the server runs with GEMINI_PRO_ENABLE_BROWSER=1.
 
         Returns:
-            One entry per benefit: what it is, where it lives, how to use it here.
+            One entry per benefit: what it is, where it lives, and how to use it here.
         """
         return as_text()

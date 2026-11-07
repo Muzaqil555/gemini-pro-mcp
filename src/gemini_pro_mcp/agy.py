@@ -230,11 +230,14 @@ def register(mcp: MCPServer, settings: Settings) -> None:
         conversation_id: str | None = None,
         effort: Effort | None = None,
     ) -> str:
-        """Ask Gemini (via the Antigravity CLI, on the user's Google AI Pro quota).
+        """Ask Gemini a question or give it a reading task, through the Antigravity
+        CLI on the user's Google AI Pro plan (no API cost; uses the plan's limits).
 
-        Good for a second opinion, reviewing local files or folders, or long
-        reasoning. Gemini can read the given paths and search the web, but
-        cannot change files. No API cost; uses the subscription's limits.
+        Good for a second opinion on code or a design, reviewing local files or
+        folders passed in `paths`, and long reasoning. Gemini runs read-only in a
+        sandbox: it can read those paths and search the web but cannot change
+        files or run commands. For web research with cited sources use
+        gemini_research; to let Gemini edit a folder use gemini_code.
 
         Args:
             prompt: The question or task.

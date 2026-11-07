@@ -2,7 +2,9 @@
 # publishing (no token stored here). One-time setup on pypi.org: Account ->
 # Publishing -> add a pending publisher for project "gemini-pro-mcp",
 # owner "Muzaqil555", repository "gemini-pro-mcp", workflow "publish.yml",
-# environment "pypi".
+# environment "pypi". Then set the repository variable PYPI_PUBLISH=true
+# (Settings -> Secrets and variables -> Actions -> Variables); until then,
+# releases skip this job instead of failing.
 name: Publish to PyPI
 
 on:
@@ -12,6 +14,7 @@ on:
 
 jobs:
   publish:
+    if: vars.PYPI_PUBLISH == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
