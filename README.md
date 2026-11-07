@@ -8,7 +8,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
 ![MCP](https://img.shields.io/badge/MCP-server-8A2BE2)
-[![Glama score](https://glama.ai/mcp/servers/Muzaqil555/gemini-pro-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Muzaqil555/gemini-pro-mcp)![Works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Codex%20%C2%B7%20Antigravity%20%C2%B7%20Gemini%20CLI-555)
+[![Glama score](https://glama.ai/mcp/servers/Muzaqil555/gemini-pro-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Muzaqil555/gemini-pro-mcp)
+[![Mentioned in Awesome Gemini CLI](https://awesome.re/mentioned-badge.svg)](https://github.com/Piebald-AI/awesome-gemini-cli)![Works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Codex%20%C2%B7%20Antigravity%20%C2%B7%20Gemini%20CLI-555)
 
 <p align="center"><b>36 tools · no API bill for Gemini · one command for Claude Code, Codex, Antigravity and Gemini CLI</b></p>
 
