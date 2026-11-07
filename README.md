@@ -1,5 +1,7 @@
 # gemini-pro-mcp
 
+**English** · [Türkçe](docs/README.tr.md) · [Русский](docs/README.ru.md) · [Azərbaycanca](docs/README.az.md)
+
 **Your Google AI Pro subscription, inside Claude, Codex and the Gemini CLI.** Gemini 4 Argon, Deep Research, Flow videos, Gemini Notebooks, Jules and the rest of the plan you already pay for, as up to 36 MCP tools. One command sets it up.
 
 [![CI](https://github.com/Muzaqil555/gemini-pro-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Muzaqil555/gemini-pro-mcp/actions/workflows/ci.yml)
@@ -7,6 +9,8 @@
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
 ![MCP](https://img.shields.io/badge/MCP-server-8A2BE2)
 [![Glama score](https://glama.ai/mcp/servers/Muzaqil555/gemini-pro-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Muzaqil555/gemini-pro-mcp)![Works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Codex%20%C2%B7%20Antigravity%20%C2%B7%20Gemini%20CLI-555)
+
+<p align="center"><b>36 tools · no API bill for Gemini · one command for Claude Code, Codex, Antigravity and Gemini CLI</b></p>
 
 <p align="center"><img src="docs/demo.svg" alt="Demo: doctor checks the setup, Claude asks Gemini for a code review on the AI Pro plan, then reads the Flow credits left" width="900"></p>
 
@@ -31,6 +35,25 @@ Ask your agent things like:
 > *"Make a 2 minute video of a fox's journey through a snowy forest with my Flow credits."*
 > *"Put these three PDFs in a Gemini Notebook and make an Audio Overview."*
 > *"Turn this logo sketch (`./sketch.png`) into a clean flat icon, 2K."*
+
+## How it compares
+
+Most Gemini MCP servers give your agent one thing: a chat with Gemini, or the Gemini API's media models. This one covers the whole AI Pro plan.
+
+| | **gemini-pro-mcp** | [gemini-mcp-tool](https://github.com/jamubc/gemini-mcp-tool) | [RLabs gemini-mcp](https://github.com/RLabs-Inc/gemini-mcp) | [GuDaStudio geminimcp](https://github.com/GuDaStudio/geminimcp) |
+|---|---|---|---|---|
+| Gemini on your AI Pro plan, no API key | ✅ Antigravity CLI | ✅ Antigravity CLI (experimental) | ❌ API key | Gemini CLI[^cli] |
+| Ask Gemini, review local files | ✅ | ✅ | ✅ | ✅ |
+| Deep Research | ✅ | — | ✅ (API) | — |
+| Images and video | ✅ (API, and Flow on the plan) | — | ✅ (API) | — |
+| Google Flow: any-length videos, every Flow tool | ✅ | — | — | — |
+| Gemini Notebooks (Audio Overviews, quizzes...) | ✅ | — | — | — |
+| Jules coding agent | ✅ | — | — | — |
+| One-command setup for Claude Code, Codex, Antigravity and Gemini CLI | ✅ `setup` + `doctor` | Claude Code and Desktop | Claude Code | Claude Code |
+
+Based on each project's README in November 2026. Corrections are welcome in an issue.
+
+[^cli]: Google retired the Gemini CLI for Google AI Pro and Ultra users on 2026-06-18 in favor of the Antigravity CLI. API-key and enterprise users can still use it.
 
 One MCP server, five ways into Google's AI:
 
