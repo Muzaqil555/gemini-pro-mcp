@@ -79,10 +79,14 @@ def register(mcp: MCPServer, settings: Settings) -> None:
 
     @mcp.tool(annotations=read)
     async def jules_sources() -> str:
-        """List the GitHub repositories connected to the user's Jules account. Free.
+        """List the GitHub repositories the user has connected to Jules, Google's
+        cloud coding agent. Read-only and free. Call it before jules_start to get
+        the exact repo name; Jules can only work on repositories listed here.
 
         Returns:
-            Source names to pass as `repo` to jules_start (e.g. "github/owner/repo").
+            One source name per line, e.g. "github/owner/repo", to pass as `repo`
+            to jules_start; or a note that no repository is connected yet, with the
+            link where the user connects GitHub.
         """
         try:
             data = await call("GET", "sources", params={"pageSize": 100})
@@ -102,19 +106,29 @@ def register(mcp: MCPServer, settings: Settings) -> None:
         create_pr: bool = False,
         require_plan_approval: bool = False,
     ) -> str:
-        """Give Jules (Google's coding agent, Pro limits) a task on a GitHub repo.
-        It works in the cloud, asynchronously; follow it with jules_status.
+        """Start a Jules session: Google's coding agent works on a task in one of
+        the user's GitHub repositories, in the cloud and asynchronously, within the
+        Google AI Pro plan's Jules limits (no extra cost). It can push a branch and
+        open a pull request, so confirm the task with the user first.
+
+        Then poll with jules_status, answer questions with jules_message, and
+        approve the plan with jules_approve_plan if you asked for approval. For a
+        change in a local folder use gemini_code instead.
 
         Args:
-            prompt: The task, with acceptance criteria.
-            repo: "github/owner/repo" from jules_sources; omit for a repo-less session.
-            branch: Starting branch.
-            title: Session title.
-            create_pr: Let Jules open a pull request automatically when done.
-            require_plan_approval: Wait for jules_approve_plan before coding.
+            prompt: The task with acceptance criteria, e.g. "Add input validation
+                to the /signup endpoint and tests for it".
+            repo: Repository from jules_sources, e.g. "github/owner/repo"; omit for
+                a session without a repository.
+            branch: Branch Jules starts from (default "main").
+            title: Optional session title; Jules makes one up otherwise.
+            create_pr: True lets Jules open a pull request automatically when done.
+            require_plan_approval: True makes Jules wait for jules_approve_plan
+                before it changes any code.
 
         Returns:
-            The session id and its web link.
+            The session id and its web link (https://jules.google.com/session/<id>),
+            or an error such as an unknown repository.
         """
         try:
             body: dict[str, Any] = {"prompt": prompt}

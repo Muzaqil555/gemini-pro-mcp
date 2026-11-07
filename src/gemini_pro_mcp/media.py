@@ -312,24 +312,31 @@ def register(mcp: MCPServer, settings: Settings) -> Media:
         wait_seconds: int = 300,
         ctx: Context | None = None,
     ) -> str:
-        """Generate a video with sound from a prompt (Gemini Omni Flash, Gemini API).
+        """Generate a short video with native sound from a text prompt, with Gemini
+        Omni Flash through the Gemini API, and save it as an .mp4 in
+        GEMINI_PRO_OUTPUT_DIR. One call makes one clip of about 8 seconds; for
+        longer videos chain video_edit, or use flow_make_video on the user's Flow
+        credits when browser tools are enabled.
 
         COSTS MONEY: billed to the API key's Google Cloud project (about $0.10 per
         second of 720p video, no free tier). Confirm with the user before calling.
 
         Args:
-            prompt: Subject, action, setting, camera and sound. English works best;
-                timecodes like "[0-3s] ... [3-6s] ..." sequence the shot.
-            aspect_ratio: "16:9" (landscape) or "9:16" (vertical).
-            resolution: "720p" (default), "360p", or upscaled "1080p" / "4k".
-            first_frame: Local image path to start from.
-            last_frame: Local image path to end on.
-            reference_images: Up to 3 local images of characters/objects to keep.
-            file_name: Optional .mp4 file name; default is date + prompt words.
-            wait_seconds: How long to wait before returning an id for video_check.
+            prompt: Subject, action, setting, camera and sound, e.g. "A red tram
+                crosses Baku at sunset, slow dolly shot, street noise". English works
+                best; timecodes like "[0-3s] ... [3-6s] ..." sequence the shot.
+            aspect_ratio: "16:9" (landscape, default) or "9:16" (vertical).
+            resolution: "720p" (default), "360p", or upscaled "1080p" or "4k".
+            first_frame: Local image path the video starts from.
+            last_frame: Local image path the video ends on.
+            reference_images: Up to 3 local images of characters or objects to keep.
+            file_name: Optional .mp4 file name; default is the date plus prompt words.
+            wait_seconds: How long to wait for the render (default 300) before
+                returning an id to fetch later with video_check.
 
         Returns:
-            The saved .mp4 path and an id for video_edit (or an id for video_check).
+            The saved .mp4 path and an id to change or extend it with video_edit;
+            or, if rendering takes longer than wait_seconds, an id for video_check.
         """
         refs = reference_images or []
         if len(refs) > 3:
@@ -412,14 +419,19 @@ def register(mcp: MCPServer, settings: Settings) -> Media:
         )
     )
     async def video_check(id: str, wait_seconds: int = 120, ctx: Context | None = None) -> str:
-        """Fetch a video that was still generating and save it. Free.
+        """Fetch a video that video_generate or video_edit started but had not
+        finished rendering when they returned, and save it as an .mp4. Free: the
+        video was paid for when it was started, and checking costs nothing. Call it
+        again with the same id if the video is still rendering.
 
         Args:
-            id: The id from video_generate or video_edit.
-            wait_seconds: How long to keep waiting now.
+            id: The id returned by video_generate or video_edit.
+            wait_seconds: How long to keep waiting in this call (default 120)
+                before returning the current status.
 
         Returns:
-            The saved .mp4 path, or the current status.
+            The saved .mp4 path and an id for video_edit once the video is ready;
+            otherwise its status (still rendering, or failed with the reason).
         """
         try:
             interaction = await media.client.aio.interactions.get(id)
@@ -439,24 +451,29 @@ def register(mcp: MCPServer, settings: Settings) -> Media:
         previous_id: str | None = None,
         file_name: str | None = None,
     ) -> str:
-        """Create or edit an image with Nano Banana (Gemini API).
+        """Create a new image from a prompt, or edit local images, with Nano Banana
+        through the Gemini API, and save the result in GEMINI_PRO_OUTPUT_DIR. Pass
+        previous_id to refine an earlier result step by step ("make the sky
+        darker") without starting over.
 
         COSTS MONEY: about $0.034 (1K), $0.05 (2K) or $0.11 (4K) per image with
         Nano Banana 2.1; Nano Banana Pro ("gemini-3-pro-image") is $0.13-0.24.
         No free tier. Confirm with the user before calling.
 
         Args:
-            prompt: What to draw, or how to change the input images.
+            prompt: What to draw, or how to change the input images, e.g. "Turn
+                this sketch into a clean flat app icon on a white background".
             model: "gemini-nano-banana-2.1" (default), "gemini-3.1-flash-lite-image"
                 (cheapest, 1K only) or "gemini-3-pro-image" (best, for hard tasks).
-            aspect_ratio: e.g. "1:1", "16:9", "9:16", "4:3".
+            aspect_ratio: "1:1" (default), "2:3", "3:2", "3:4", "4:3", "4:5", "5:4",
+                "9:16", "16:9" or "21:9".
             image_size: "1K" (default), "2K" or "4K".
-            input_images: Local images to edit or to use as references.
-            previous_id: id of an earlier image_generate result to refine.
-            file_name: Optional file name.
+            input_images: Local image paths to edit or to use as references.
+            previous_id: The id of an earlier image_generate result to refine.
+            file_name: Optional file name; default is the date plus prompt words.
 
         Returns:
-            The saved image path and an id to refine it further.
+            The saved image path and an id to pass as previous_id for further edits.
         """
         try:
             content = [image_part(p) for p in input_images or []]

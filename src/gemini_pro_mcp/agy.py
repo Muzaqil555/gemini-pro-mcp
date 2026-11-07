@@ -270,18 +270,25 @@ def register(mcp: MCPServer, settings: Settings) -> None:
         model: str | None = None,
         effort: Effort | None = None,
     ) -> str:
-        """Research a question on the live web with Gemini and Google Search.
+        """Research a question on the live web with Gemini and Google Search, and
+        get an answer that cites its sources. Use it for current facts, releases,
+        prices, docs or comparisons that may be newer than your training data.
 
-        Runs on the user's Google AI Pro quota through the Antigravity CLI; the
-        answer ends with source URLs. Takes about a minute.
+        Runs through the Antigravity CLI on the user's Google AI Pro plan: no API
+        cost, uses the plan's limits. Read-only. Gemini prefers official sources,
+        cross-checks key facts and says when sources disagree. Usually takes about
+        a minute. For questions about local files use gemini_ask instead.
 
         Args:
-            question: What to find out, with any context that narrows it down.
-            model: Model id from gemini_models; default is agy's.
-            effort: Reasoning effort: low, medium, high, xhigh or max.
+            question: What to find out, with context that narrows it, e.g.
+                "What changed in Flutter 3.47 for Android builds?".
+            model: Model id from gemini_models, e.g. "gemini-4-argon-high";
+                omit for agy's default (or GEMINI_PRO_AGY_MODEL).
+            effort: Reasoning effort: "low", "medium", "high", "xhigh" or "max".
 
         Returns:
-            A sourced answer and a conversation_id for follow-ups (use gemini_ask).
+            The answer followed by a "Sources" list of URLs, and a conversation_id;
+            pass it to gemini_ask to ask follow-up questions in the same chat.
         """
         try:
             return format_result(
@@ -308,23 +315,29 @@ def register(mcp: MCPServer, settings: Settings) -> None:
         effort: Effort | None = None,
         conversation_id: str | None = None,
     ) -> str:
-        """Let Gemini (Antigravity agent, on the user's Google AI Pro quota) do a
-        coding task IN a local folder: it reads and EDITS files there. Terminal
-        commands stay sandboxed. No API cost.
+        """Delegate a coding task to Gemini, which reads and EDITS files in one
+        local folder through the Antigravity agent on the user's Google AI Pro plan
+        (no API cost). This changes files: tell the user, and review the result
+        afterwards, e.g. with `git diff`. Terminal commands run in a sandbox and
+        only the given folder is writable.
 
-        Good for delegating a well-defined change (fix a bug, add tests, refactor a
-        module) while you review the diff afterwards (e.g. `git diff`).
+        Good for a well-defined change: fix a bug, add tests, refactor a module.
+        For read-only questions use gemini_ask; for a task on a GitHub repo that
+        should end in a pull request use jules_start.
 
         Args:
-            task: What to change, with acceptance criteria.
-            folder: The project folder Gemini works in (only this folder).
-            model: Model id from gemini_models; default is agy's.
-            agent: An Antigravity agent name from gemini_agents, if wanted.
-            effort: low, medium, high, xhigh or max.
-            conversation_id: Continue an earlier gemini_code/gemini_ask chat.
+            task: What to change and how to know it is done, e.g. "Add unit tests
+                for parse_date in utils/dates.py; all tests must pass".
+            folder: Absolute path of the project folder Gemini may edit.
+            model: Model id from gemini_models; omit for agy's default.
+            agent: Name of an Antigravity agent from gemini_agents to run the task.
+            effort: Reasoning effort: "low", "medium", "high", "xhigh" or "max".
+            conversation_id: Continue an earlier gemini_code or gemini_ask chat, e.g.
+                to ask for fixes to the previous change.
 
         Returns:
-            Gemini's summary of what it changed and a conversation_id.
+            Gemini's summary of what it changed, and a conversation_id for follow-up
+            requests; or an error if the folder does not exist.
         """
         try:
             path = Path(folder).expanduser().resolve()
@@ -347,11 +360,14 @@ def register(mcp: MCPServer, settings: Settings) -> None:
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, openWorldHint=True))
     async def gemini_agents() -> str:
-        """List the Antigravity agents available to the user (custom agents they
-        made or installed). Pass a name as `agent` to gemini_code. Free.
+        """List the custom Antigravity agents the user has made or installed, such
+        as a "reviewer" or "test-writer" agent with its own instructions.
+        Read-only, free and quick. Call it before gemini_code when the user wants
+        a task done by a specific agent.
 
         Returns:
-            The agent names.
+            The agent names and descriptions as the Antigravity CLI prints them; pass
+            a name as `agent` to gemini_code. "No custom agents." if there are none.
         """
         if not settings.agy_path:
             return f"Error: {INSTALL_HINT}"
@@ -363,10 +379,15 @@ def register(mcp: MCPServer, settings: Settings) -> None:
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, openWorldHint=True))
     async def gemini_models() -> str:
-        """List the models the user's Google account can use through Antigravity.
+        """List the models the user's Google account can use through the Antigravity
+        CLI, e.g. Gemini 4 Argon and Gemini 3.8 Flash at several thinking levels.
+        Read-only, free and quick. Call it when the user asks for a specific or
+        stronger model; otherwise the gemini_* tools use agy's default.
 
         Returns:
-            One "id — name" line per model; pass the id as `model` to the gemini_* tools.
+            One "id — name" line per model, e.g. "gemini-4-argon-high — Gemini 4
+            Argon (High)". Pass the id as `model` to gemini_ask, gemini_research or
+            gemini_code.
         """
         if not settings.agy_path:
             return f"Error: {INSTALL_HINT}"

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Every tool description now says when to use the tool rather than a related one, what it costs or changes, the valid values of each parameter with an example, and what it returns: `gemini_research`, `gemini_code`, `gemini_agents`, `gemini_models`, `jules_sources`, `jules_start`, `video_generate`, `video_check` and `image_generate`.
+
 ## 0.1.1
 
 - Clearer tool descriptions for `gemini_ask`, `video_stitch`, `google_pro_benefits` and the `jules_*` tools: when to use each one, what it costs and what it returns.
