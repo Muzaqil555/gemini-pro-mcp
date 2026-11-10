@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `setup` registers the PyPI package (`uvx gemini-pro-mcp`) instead of the GitHub URL, and the README installs from PyPI.
+
 ## 0.1.4
 
 - Published on PyPI (`uvx gemini-pro-mcp`) and listed in the official MCP Registry as `io.github.Muzaqil555/gemini-pro-mcp`.

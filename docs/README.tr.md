@@ -7,7 +7,7 @@
 <p align="center"><img src="demo.svg" alt="Demo: doctor kurulumu kontrol eder, Claude Gemini'den kod incelemesi ister ve Flow kredilerini okur" width="900"></p>
 
 ```bash
-uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp setup
+uvx gemini-pro-mcp setup
 ```
 
 İşinize yararsa, bir ⭐ diğer AI Pro kullanıcılarının onu bulmasına yardımcı olur.
@@ -34,7 +34,7 @@ Ajanınızdan şunları isteyin:
 3. Şu komutu çalıştırın:
 
 ```bash
-uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp setup
+uvx gemini-pro-mcp setup
 ```
 
 `setup` bilgisayarınızda Claude Code, Codex, Antigravity CLI ve Gemini CLI'ı bulur, sunucuyu her birine ekler ve neyin çalıştığını kontrol eder. Ardından istemcileri yeniden başlatın.
@@ -46,7 +46,7 @@ uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp setup
 Daha sonra kontrol etmek için:
 
 ```bash
-uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp doctor --flow
+uvx gemini-pro-mcp doctor --flow
 ```
 
 Medya araçları (`video_generate`, `image_generate`) için [Google AI Studio](https://aistudio.google.com/apikey)'dan bir API anahtarı gerekir. Onu `~/.config/gemini-pro-mcp/.env` dosyasına `GEMINI_API_KEY=...` olarak yazın.

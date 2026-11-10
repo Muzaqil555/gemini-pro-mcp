@@ -75,9 +75,9 @@ def test_client_commands():
 def test_server_command(monkeypatch, tmp_path):
     monkeypatch.setattr(install, "source_root", lambda: None)
     _, args = install.server_command(browser=False)
-    assert args == ["--from", f"git+{install.REPO}", "gemini-pro-mcp"]
+    assert args == ["gemini-pro-mcp"]
     _, args = install.server_command(browser=True)
-    assert args[1] == f"gemini-pro-mcp[flow] @ git+{install.REPO}"
+    assert args == ["--from", "gemini-pro-mcp[flow]", "gemini-pro-mcp"]
     monkeypatch.setattr(install, "source_root", lambda: tmp_path)
     _, args = install.server_command(browser=True)
     assert args == ["--directory", tmp_path.as_posix(), "run", "--extra", "flow", "gemini-pro-mcp"]

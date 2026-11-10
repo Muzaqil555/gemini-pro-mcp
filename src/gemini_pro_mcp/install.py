@@ -22,7 +22,6 @@ from pathlib import Path
 from . import __version__
 from .config import Settings, env_file
 
-REPO = "https://github.com/Muzaqil555/gemini-pro-mcp"
 DEFAULT_NAME = "gemini-pro"
 CLIENTS = ("claude", "codex", "agy", "gemini")
 
@@ -87,8 +86,8 @@ def browser_checks(settings: Settings) -> list[Check]:
             Check(
                 "Playwright",
                 None,
-                f'not installed: browser tools need `uvx --from "gemini-pro-mcp[flow] @ '
-                f'git+{REPO}" gemini-pro-mcp` (setup --browser registers that)',
+                'not installed: browser tools need `uvx --from "gemini-pro-mcp[flow]" '
+                "gemini-pro-mcp` (setup --browser registers that)",
             )
         )
     else:
@@ -189,8 +188,9 @@ def server_command(browser: bool) -> tuple[str, list[str]]:
             *extra,
             "gemini-pro-mcp",
         ]
-    spec = f"gemini-pro-mcp[flow] @ git+{REPO}" if browser else f"git+{REPO}"
-    return shutil.which("uvx") or "uvx", ["--from", spec, "gemini-pro-mcp"]
+    if browser:
+        return shutil.which("uvx") or "uvx", ["--from", "gemini-pro-mcp[flow]", "gemini-pro-mcp"]
+    return shutil.which("uvx") or "uvx", ["gemini-pro-mcp"]
 
 
 def server_env(browser: bool, auto_approve: bool) -> dict[str, str]:

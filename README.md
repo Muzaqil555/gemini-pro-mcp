@@ -8,7 +8,8 @@
 [![CI](https://github.com/Muzaqil555/gemini-pro-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Muzaqil555/gemini-pro-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
-![MCP](https://img.shields.io/badge/MCP-server-8A2BE2)
+[![PyPI](https://img.shields.io/pypi/v/gemini-pro-mcp)](https://pypi.org/project/gemini-pro-mcp/)
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-8A2BE2)](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.Muzaqil555/gemini-pro-mcp)
 [![Glama score](https://glama.ai/mcp/servers/Muzaqil555/gemini-pro-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Muzaqil555/gemini-pro-mcp)
 [![Mentioned in Awesome Gemini CLI](https://awesome.re/mentioned-badge.svg)](https://github.com/Piebald-AI/awesome-gemini-cli)
 [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/muzaqil555/gemini-pro-mcp)
@@ -19,7 +20,7 @@
 <p align="center"><img src="docs/demo.svg" alt="Demo: doctor checks the setup, Claude asks Gemini for a code review on the AI Pro plan, then reads the Flow credits left" width="900"></p>
 
 ```bash
-uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp setup
+uvx gemini-pro-mcp setup
 ```
 
 If it saves you an API bill or a tab switch, a ⭐ helps other AI Pro users find it.
@@ -80,7 +81,7 @@ One MCP server, five ways into Google's AI:
 ### 2. Add it to your clients (one command)
 
 ```bash
-uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp setup
+uvx gemini-pro-mcp setup
 ```
 
 `setup` finds Claude Code, Codex, the Antigravity CLI and the Gemini CLI on your computer, adds the server to each one, and then checks what works: the Antigravity sign-in, your API keys, Chrome and the Flow profile. Each item it reports as missing comes with the fix. Restart the clients afterwards.
@@ -92,7 +93,7 @@ uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp setup
 Edited config files are backed up next to themselves (`config.toml.bak`, `settings.json.bak`). To check things again later, without changing anything:
 
 ```bash
-uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp doctor --flow
+uvx gemini-pro-mcp doctor --flow
 ```
 
 To add the server by hand instead, use the client's own command:
@@ -100,13 +101,13 @@ To add the server by hand instead, use the client's own command:
 **Claude Code**
 
 ```bash
-claude mcp add gemini-pro --scope user -- uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp
+claude mcp add gemini-pro --scope user -- uvx gemini-pro-mcp
 ```
 
 **Codex**
 
 ```bash
-codex mcp add gemini-pro -- uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp
+codex mcp add gemini-pro -- uvx gemini-pro-mcp
 ```
 
 Or in `~/.codex/config.toml`. Raise the tool timeout: Flow and Deep Research calls take minutes, longer than Codex's default.
@@ -114,7 +115,7 @@ Or in `~/.codex/config.toml`. Raise the tool timeout: Flow and Deep Research cal
 ```toml
 [mcp_servers.gemini-pro]
 command = "uvx"
-args = ["--from", "git+https://github.com/Muzaqil555/gemini-pro-mcp", "gemini-pro-mcp"]
+args = ["gemini-pro-mcp"]
 startup_timeout_sec = 60
 tool_timeout_sec = 900
 ```
@@ -122,8 +123,8 @@ tool_timeout_sec = 900
 **Antigravity CLI and Gemini CLI**
 
 ```bash
-agy mcp add gemini-pro -- uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp
-gemini mcp add gemini-pro uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp gemini-pro-mcp
+agy mcp add gemini-pro -- uvx gemini-pro-mcp
+gemini mcp add gemini-pro uvx gemini-pro-mcp
 ```
 
 Settings go in as environment variables, e.g. `agy mcp add --env GEMINI_PRO_ENABLE_BROWSER=1 gemini-pro -- ...`, or in the `.env` file below.
@@ -135,7 +136,7 @@ Settings go in as environment variables, e.g. `agy mcp add --env GEMINI_PRO_ENAB
   "mcpServers": {
     "gemini-pro": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/Muzaqil555/gemini-pro-mcp", "gemini-pro-mcp"]
+      "args": ["gemini-pro-mcp"]
     }
   }
 }
@@ -234,7 +235,7 @@ By default the server tells the model to **confirm with you before every paid ca
 [Google Flow](https://flow.google.com) has no public API. The Flow tools drive the website in a **dedicated Chrome profile that you sign in to yourself**:
 
 ```bash
-uvx --from "gemini-pro-mcp[flow] @ git+https://github.com/Muzaqil555/gemini-pro-mcp" gemini-pro-mcp flow-login
+uvx --from "gemini-pro-mcp[flow]" gemini-pro-mcp flow-login
 ```
 
 Then set `GEMINI_PRO_ENABLE_BROWSER=1` (the older `GEMINI_PRO_ENABLE_FLOW=1` still works). This enables every browser-based tool: Flow, the Gemini app, AI Mode and the other Google AI sites, all in that one signed-in profile.
