@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4
+
+- Published on PyPI (`uvx gemini-pro-mcp`) and listed in the official MCP Registry as `io.github.Muzaqil555/gemini-pro-mcp`.
+- 0.1.3 was a Glama-only build of 0.1.2 and has no GitHub release.
+
 ## 0.1.2
 
 - Every tool description now says when to use the tool rather than a related one, what it costs or changes, the valid values of each parameter with an example, and what it returns: `gemini_research`, `gemini_code`, `gemini_agents`, `gemini_models`, `jules_sources`, `jules_start`, `video_generate`, `video_check` and `image_generate`.

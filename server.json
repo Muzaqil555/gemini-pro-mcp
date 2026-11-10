@@ -1,0 +1,46 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Muzaqil555/gemini-pro-mcp",
+  "title": "Gemini Pro MCP",
+  "description": "Your Google AI Pro plan in Claude, Codex and Gemini CLI: Gemini, Flow, Notebooks, Jules, Veo",
+  "repository": {
+    "url": "https://github.com/Muzaqil555/gemini-pro-mcp",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/Muzaqil555/gemini-pro-mcp#readme",
+  "version": "0.1.4",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "gemini-pro-mcp",
+      "version": "0.1.4",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "GEMINI_API_KEY",
+          "description": "Gemini API key for the video and image tools (optional; these tools are billed)",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "JULES_API_KEY",
+          "description": "Jules API key from jules.google.com/settings (optional, for the jules_* tools)",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "GEMINI_PRO_ENABLE_FLOW",
+          "description": "Set to 1 to enable the Google Flow tools",
+          "isRequired": false
+        },
+        {
+          "name": "GEMINI_PRO_ENABLE_BROWSER",
+          "description": "Set to 1 to enable all browser tools (Gemini app, Notebooks, AI Mode)",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}

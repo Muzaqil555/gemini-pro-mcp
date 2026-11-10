@@ -1,4 +1,5 @@
 # gemini-pro-mcp
+<!-- mcp-name: io.github.Muzaqil555/gemini-pro-mcp -->
 
 **English** · [Türkçe](docs/README.tr.md) · [Русский](docs/README.ru.md) · [Azərbaycanca](docs/README.az.md)
 
