@@ -4,6 +4,8 @@
 
 **Google AI Pro abunəliyiniz Claude, Codex və Gemini CLI-nin içində.** Gemini 4 Argon, Deep Research, Flow videoları, Gemini Notebooks, Jules və artıq ödədiyiniz planın qalan imkanları, 36-ya qədər MCP aləti kimi. Bir əmrlə qurulur.
 
+<p align="center"><img src="demo.gif" alt="Demo: Claude Code-da bir cümlə Bakıda bir gün haqqında 2 dəqiqəlik videoya çevrilir; video Google Flow-da, AI Pro planının kreditləri ilə hazırlanır" width="720"></p>
+
 <p align="center"><img src="demo.svg" alt="Demo: doctor quraşdırmanı yoxlayır, Claude Gemini-dən kod yoxlaması istəyir və Flow kreditlərini oxuyur" width="900"></p>
 
 ```bash
