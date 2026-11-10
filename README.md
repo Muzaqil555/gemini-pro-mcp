@@ -17,7 +17,7 @@
 
 <p align="center"><b>36 tools · no API bill for Gemini · one command for Claude Code, Codex, Antigravity and Gemini CLI</b></p>
 
-<p align="center"><img src="docs/demo.gif" alt="Demo: one sentence in Claude Code becomes a 2 minute video of a day in Baku, made in Google Flow on the AI Pro plan's credits" width="720"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/Muzaqil555/gemini-pro-mcp/main/docs/demo.gif" alt="Demo: one sentence in Claude Code becomes a 2 minute video of a day in Baku, made in Google Flow on the AI Pro plan's credits" width="720"></p>
 
 ```bash
 uvx gemini-pro-mcp setup
@@ -41,7 +41,7 @@ Ask your agent things like:
 > *"Put these three PDFs in a Gemini Notebook and make an Audio Overview."*
 > *"Turn this logo sketch (`./sketch.png`) into a clean flat icon, 2K."*
 
-<p align="center"><img src="docs/demo.svg" alt="Demo: doctor checks the setup, Claude asks Gemini for a code review on the AI Pro plan, then reads the Flow credits left" width="900"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/Muzaqil555/gemini-pro-mcp/main/docs/demo.svg" alt="Demo: doctor checks the setup, Claude asks Gemini for a code review on the AI Pro plan, then reads the Flow credits left" width="900"></p>
 
 ## How it compares
 

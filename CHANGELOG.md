@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.1.5
 
 - `setup` registers the PyPI package (`uvx gemini-pro-mcp`) instead of the GitHub URL, and the README installs from PyPI.
+- A first run on Python 3.12+ no longer prints `SyntaxWarning` lines from the google-genai SDK.
+- PyPI page: the description, keywords and links now match the README.
 
 ## 0.1.4
 
