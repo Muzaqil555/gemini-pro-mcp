@@ -131,6 +131,18 @@ gemini mcp add gemini-pro uvx gemini-pro-mcp
 
 Settings go in as environment variables, e.g. `agy mcp add --env GEMINI_PRO_ENABLE_BROWSER=1 gemini-pro -- ...`, or in the `.env` file below.
 
+**As a Gemini CLI extension or a Claude Code plugin.** Both only add the server; run `uvx gemini-pro-mcp doctor` afterwards to see what works.
+
+```bash
+gemini extensions install https://github.com/Muzaqil555/gemini-pro-mcp
+```
+
+In Claude Code:
+
+```
+/plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp
+```
+
 **Claude Desktop, Cursor, Windsurf and other clients.** Add this to the client's MCP config:
 
 ```json

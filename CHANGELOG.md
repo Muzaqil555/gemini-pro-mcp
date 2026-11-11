@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Installable as a Gemini CLI extension (`gemini extensions install https://github.com/Muzaqil555/gemini-pro-mcp`) and as a Claude Code plugin (`/plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp`).
+
 ## 0.1.5
 
 - `setup` registers the PyPI package (`uvx gemini-pro-mcp`) instead of the GitHub URL, and the README installs from PyPI.

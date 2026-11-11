@@ -1,0 +1,16 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "gemini-pro-mcp",
+  "description": "Google AI Pro as MCP tools for Claude Code.",
+  "owner": {
+    "name": "Muzaqil Hesenli",
+    "url": "https://github.com/Muzaqil555"
+  },
+  "plugins": [
+    {
+      "name": "gemini-pro",
+      "source": "./",
+      "description": "Use your Google AI Pro subscription from Claude Code: Gemini, Deep Research, Jules, Gemini Notebooks and Google Flow video as MCP tools."
+    }
+  ]
+}

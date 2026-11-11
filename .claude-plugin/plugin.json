@@ -1,0 +1,19 @@
+{
+  "name": "gemini-pro",
+  "version": "0.1.5",
+  "description": "Use your Google AI Pro subscription from Claude Code: Gemini and Deep Research through the Antigravity CLI on the plan's limits, plus Jules, Gemini Notebooks, Google Flow video, Omni Flash video and Nano Banana images.",
+  "author": {
+    "name": "Muzaqil Hesenli",
+    "url": "https://github.com/Muzaqil555"
+  },
+  "homepage": "https://github.com/Muzaqil555/gemini-pro-mcp",
+  "repository": "https://github.com/Muzaqil555/gemini-pro-mcp",
+  "license": "MIT",
+  "keywords": ["gemini", "google-ai-pro", "antigravity", "deep-research", "jules", "notebooklm", "google-flow", "mcp"],
+  "mcpServers": {
+    "gemini-pro": {
+      "command": "uvx",
+      "args": ["gemini-pro-mcp"]
+    }
+  }
+}
