@@ -43,6 +43,8 @@ The server then runs or connects to these, only when you call the matching tool:
 - The server never sees or types your Google password. You sign in yourself, in the Antigravity CLI and in the Chrome profile.
 - Generated files are saved on your computer.
 
+The full statement is in the [privacy policy](https://github.com/Muzaqil555/gemini-pro-mcp/blob/main/PRIVACY.md).
+
 Google's own terms and privacy policy apply to what you send to Google. The browser tools automate Google's web apps on your account; they are experimental and off by default.
 
 ## Check your setup

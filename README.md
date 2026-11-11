@@ -305,6 +305,8 @@ Ideas and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 - The server never sees or types your Google password.
 - Generated files are saved locally.
 
+The full statement is in the [privacy policy](PRIVACY.md).
+
 ## Disclaimer
 
 This is an independent open-source project. It is not affiliated with, endorsed by or sponsored by Google or Anthropic. Gemini, Google AI Pro, Flow and Antigravity are trademarks of Google LLC.
