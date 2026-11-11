@@ -24,7 +24,7 @@ Use your Google AI Pro subscription from Claude Code. This plugin adds one local
 
 ## What the plugin runs
 
-The plugin starts the server with `uvx gemini-pro-mcp==<version>`. uv downloads that exact version of the package from PyPI, with its dependencies, and runs it on your computer over stdio. The plugin has no hooks, skills, commands or agents.
+The plugin starts the server with `uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp@<commit> gemini-pro-mcp`, where `<commit>` is the full commit of the released version. uv fetches that commit from GitHub, installs it with its dependencies from PyPI, and runs it on your computer over stdio. You need git for this. The plugin has no hooks, skills, commands or agents.
 
 The server then runs or connects to these, only when you call the matching tool:
 

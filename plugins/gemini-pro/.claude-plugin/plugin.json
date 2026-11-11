@@ -23,7 +23,9 @@
     "gemini-pro": {
       "command": "uvx",
       "args": [
-        "gemini-pro-mcp==0.1.5"
+        "--from",
+        "git+https://github.com/Muzaqil555/gemini-pro-mcp@8f9df7e1d4193ff8234165944953496ca0f2fef6",
+        "gemini-pro-mcp"
       ]
     }
   }
