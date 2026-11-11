@@ -297,6 +297,14 @@ Claude ── MCP (stdio) ──> gemini-pro-mcp ──┬── agy --print (pl
 
 Ideas and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Privacy and data
+
+- The server runs on your computer. It has no telemetry and sends nothing to the author.
+- Your prompts, and the files you ask a tool to read or upload, go to the Google service behind that tool: Gemini through the Antigravity CLI, the Jules API, the Gemini API, or the Google web app open in your own Chrome.
+- API keys are read from your environment or from `~/.config/gemini-pro-mcp/.env` and are sent only to the Google API they belong to.
+- The server never sees or types your Google password.
+- Generated files are saved locally.
+
 ## Disclaimer
 
 This is an independent open-source project. It is not affiliated with, endorsed by or sponsored by Google or Anthropic. Gemini, Google AI Pro, Flow and Antigravity are trademarks of Google LLC.

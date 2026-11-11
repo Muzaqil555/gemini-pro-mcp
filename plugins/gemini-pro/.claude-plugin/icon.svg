@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="gemini-pro">
+  <rect width="128" height="128" rx="28" fill="#0d1117"/>
+  <path d="M30 84 C30 44 98 44 98 84" fill="none" stroke="#58a6ff" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="30" cy="88" r="13" fill="#3fb950"/>
+  <circle cx="98" cy="88" r="13" fill="#bc8cff"/>
+</svg>

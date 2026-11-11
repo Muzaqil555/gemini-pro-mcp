@@ -9,11 +9,22 @@
   "homepage": "https://github.com/Muzaqil555/gemini-pro-mcp",
   "repository": "https://github.com/Muzaqil555/gemini-pro-mcp",
   "license": "MIT",
-  "keywords": ["gemini", "google-ai-pro", "antigravity", "deep-research", "jules", "notebooklm", "google-flow", "mcp"],
+  "keywords": [
+    "gemini",
+    "google-ai-pro",
+    "antigravity",
+    "deep-research",
+    "jules",
+    "notebooklm",
+    "google-flow",
+    "mcp"
+  ],
   "mcpServers": {
     "gemini-pro": {
       "command": "uvx",
-      "args": ["gemini-pro-mcp"]
+      "args": [
+        "gemini-pro-mcp==0.1.5"
+      ]
     }
   }
 }

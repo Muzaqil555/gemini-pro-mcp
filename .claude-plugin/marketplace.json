@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "gemini-pro",
-      "source": "./",
+      "source": "./plugins/gemini-pro",
       "description": "Use your Google AI Pro subscription from Claude Code: Gemini, Deep Research, Jules, Gemini Notebooks and Google Flow video as MCP tools."
     }
   ]
