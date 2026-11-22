@@ -1,12 +1,13 @@
 """Joining clips into one video, locally and for free.
 
 Uses the ffmpeg binary bundled with imageio-ffmpeg (installed with the `flow`
-extra), so nothing has to be installed system-wide.
+extra), so nothing has to be installed system-wide; without it, the ffmpeg on PATH.
 """
 
 from __future__ import annotations
 
 import asyncio
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -16,8 +17,9 @@ from mcp_types import ToolAnnotations
 from .config import Settings
 
 INSTALL_HINT = (
-    "Joining videos needs the bundled ffmpeg: install with `pip install gemini-pro-mcp[flow]` "
-    "(or `uvx --with imageio-ffmpeg gemini-pro-mcp`)."
+    "Joining videos needs ffmpeg. Install ffmpeg so that `ffmpeg` is on PATH, or install "
+    "the bundled one: `pip install gemini-pro-mcp[flow]` (or `uvx --with imageio-ffmpeg "
+    "gemini-pro-mcp`)."
 )
 
 
@@ -35,10 +37,14 @@ def unique_path(folder: Path, stem: str, suffix: str) -> Path:
 
 
 def ffmpeg_exe() -> str:
+    """The ffmpeg bundled with imageio-ffmpeg, else the one on PATH."""
     try:
         import imageio_ffmpeg
-    except ImportError as e:
-        raise StitchError(INSTALL_HINT) from e
+    except ImportError:
+        on_path = shutil.which("ffmpeg")
+        if on_path:
+            return on_path
+        raise StitchError(INSTALL_HINT) from None
     return imageio_ffmpeg.get_ffmpeg_exe()
 
 
