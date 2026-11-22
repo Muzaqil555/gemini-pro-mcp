@@ -314,6 +314,7 @@ def register(mcp: MCPServer, settings: Settings) -> None:
             Gemini's answer, saved media paths and the chat URL.
         """
         try:
+            paths = local_files(files)
             async with Tab(settings, "gemini.google.com") as tab:
                 page = tab.page
                 await tab.goto(GEMINI, settle_ms=5000)
@@ -334,8 +335,7 @@ def register(mcp: MCPServer, settings: Settings) -> None:
                     await click_menu_item(page, "Thinking level")
                     await page.get_by_text(thinking.capitalize(), exact=True).first.click()
                     await page.wait_for_timeout(800)
-                if files:
-                    paths = [str(Path(f).expanduser().resolve()) for f in files]
+                if paths:
                     await page.locator('button[aria-label="Upload & tools"]').first.click()
                     await page.wait_for_timeout(800)
                     await page.locator('input[type="file"]').first.set_input_files(paths)
