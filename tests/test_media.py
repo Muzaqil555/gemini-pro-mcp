@@ -141,6 +141,15 @@ async def test_image_generate_saves_with_extension(setup):
     assert fake.requests[0]["response_format"]["image_size"] == "2K"
 
 
+async def test_image_generate_reports_a_text_only_answer(setup):
+    server, use, tmp = setup
+    output = {"output_image": None, "output_text": "I can't draw that person."}
+    use(FakeInteractions(output))
+    result = text_of(await server.call_tool("image_generate", {"prompt": "x"}))
+    assert result == "Error: No image came back. Gemini said: I can't draw that person."
+    assert not (tmp / "out").exists()
+
+
 def test_frame_content_orders_images_and_guides(tmp_path):
     first = tmp_path / "a.png"
     ref = tmp_path / "r.jpg"
