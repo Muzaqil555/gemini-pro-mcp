@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `jules_sources` lists every connected repository. It read only the first page of the Jules API (100 repositories), so with more connected, `jules_start` couldn't be pointed at the rest by name from the list.
+
 ## 0.1.6
 
 - `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.

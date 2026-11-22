@@ -98,3 +98,20 @@ async def test_gemini_code_runs_in_the_folder(tmp_path, monkeypatch):
     assert "changed calc.py" in out
     assert seen["cwd"] == tmp_path.resolve()
     assert seen["args"][seen["args"].index("--mode") + 1] == "accept-edits"
+
+
+async def test_sources_reads_every_page(monkeypatch):
+    pages = {
+        None: {"sources": [{"id": "github/o/a"}], "nextPageToken": "t2"},
+        "t2": {"sources": [{"id": "github/o/b"}]},
+    }
+
+    async def fake_call(method, path, body=None, params=None):
+        assert path == "sources"
+        return pages[params.get("pageToken")]
+
+    monkeypatch.setattr(jules, "call", fake_call)
+    mcp = MCPServer("test")
+    jules.register(mcp, Settings.from_env())
+    text = text_of(await mcp.call_tool("jules_sources", {}))
+    assert text.splitlines() == ["github/o/a", "github/o/b"]

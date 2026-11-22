@@ -89,8 +89,14 @@ def register(mcp: MCPServer, settings: Settings) -> None:
             link where the user connects GitHub.
         """
         try:
-            data = await call("GET", "sources", params={"pageSize": 100})
-            sources = data.get("sources", [])
+            sources: list[dict[str, Any]] = []
+            params: dict[str, Any] = {"pageSize": 100}
+            for _ in range(20):  # the API returns at most 100 per page
+                data = await call("GET", "sources", params=params)
+                sources += data.get("sources", [])
+                if not data.get("nextPageToken"):
+                    break
+                params = {"pageSize": 100, "pageToken": data["nextPageToken"]}
             return "\n".join(s.get("id", s.get("name", "")) for s in sources) or (
                 "No repositories connected. Connect GitHub at https://jules.google.com."
             )
