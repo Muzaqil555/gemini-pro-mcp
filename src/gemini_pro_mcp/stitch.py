@@ -48,6 +48,15 @@ def ffmpeg_exe() -> str:
     return imageio_ffmpeg.get_ffmpeg_exe()
 
 
+def concat_listing(clips: list[Path]) -> str:
+    """The concat demuxer's file list; a ' in a path is written as '\\''."""
+    lines = []
+    for clip in clips:
+        path = clip.resolve().as_posix().replace("'", "'\\''")
+        lines.append(f"file '{path}'\n")
+    return "".join(lines)
+
+
 async def _run(args: list[str]) -> tuple[int, str]:
     process = await asyncio.create_subprocess_exec(
         *args,
@@ -71,9 +80,7 @@ async def stitch(clips: list[Path], output: Path) -> Path:
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         listing = Path(tmp) / "clips.txt"
-        listing.write_text(
-            "".join(f"file '{clip.resolve().as_posix()}'\n" for clip in clips), encoding="utf-8"
-        )
+        listing.write_text(concat_listing(clips), encoding="utf-8")
         base = [exe, "-y", "-hide_banner", "-loglevel", "error", "-f", "concat", "-safe", "0"]
         code, err = await _run([*base, "-i", str(listing), "-c", "copy", str(output)])
         if code != 0:
