@@ -151,15 +151,22 @@ def parse_output(stdout: str) -> AgyResult:
     return result
 
 
-def read_text_file(path: Path) -> str | None:
-    """The file's text, or None if it is binary or can't be read."""
+def read_text_file(path: Path, max_chars: int = EMBED_FILE_MAX_CHARS) -> str | None:
+    """The file's text, or None if it is binary, longer than max_chars or can't be read.
+
+    Reads at most 4 bytes per character (the most UTF-8 needs), so a large file
+    such as a video passed in `paths` is never loaded into memory.
+    """
+    limit = 4 * max_chars
     try:
-        data = path.read_bytes()
+        with path.open("rb") as f:
+            data = f.read(limit + 1)
     except OSError:
         return None
-    if b"\x00" in data[:8192]:
+    if len(data) > limit or b"\x00" in data[:8192]:
         return None
-    return data.decode("utf-8", errors="replace")
+    text = data.decode("utf-8", errors="replace")
+    return text if len(text) <= max_chars else None
 
 
 def with_files(prompt: str, files: list[Path]) -> str:
@@ -173,7 +180,7 @@ def with_files(prompt: str, files: list[Path]) -> str:
     for path in files:
         text = read_text_file(path)
         block = f'<file path="{path}">\n{text}\n</file>' if text is not None else ""
-        if text is not None and len(text) <= EMBED_FILE_MAX_CHARS and len(block) <= budget:
+        if text is not None and len(block) <= budget:
             included.append(block)
             budget -= len(block)
         else:

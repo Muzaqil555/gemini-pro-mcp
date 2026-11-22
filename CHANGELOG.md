@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `gemini_ask` no longer reads a whole file passed in `paths` to decide whether its text fits in the prompt. A large file, such as a video, used to be loaded into memory in full before it was listed by path; now at most about 80 KB of each file is read.
+
 ## 0.1.6
 
 - `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.
