@@ -477,8 +477,11 @@ def register(mcp: MCPServer, settings: Settings) -> None:
         """Delegate a coding task to Gemini, which reads and EDITS files in one
         local folder through the Antigravity agent on the user's Google AI Pro plan
         (no API cost). This changes files: tell the user, and review the result
-        afterwards, e.g. with `git diff`. Terminal commands run in a sandbox and
-        only the given folder is writable.
+        afterwards, e.g. with `git diff`. Gemini can't run terminal commands here,
+        so run the tests yourself afterwards. Antigravity CLI 1.5 can't get approval
+        for file access when it runs headless. Then this tool returns agy's
+        explanation within about a minute and changes nothing; use jules_start
+        instead.
 
         Good for a well-defined change: fix a bug, add tests, refactor a module.
         For read-only questions use gemini_ask; for a task on a GitHub repo that

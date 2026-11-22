@@ -172,11 +172,13 @@ Or pass it as an `env` entry in the client config. Restart the client afterwards
 
 | Tool | What it does |
 |---|---|
-| `gemini_ask` | Ask Gemini anything. Pass `paths` to let it read local files or folders, and `conversation_id` to continue a chat. |
+| `gemini_ask` | Ask Gemini anything. Pass `paths` with local files, and the server sends their text with the prompt (up to 20 000 characters per file). Pass `conversation_id` to continue a chat. |
 | `gemini_research` | Live web research with Google Search. The answer ends with source URLs. |
 | `gemini_models` | Lists the models your account can use, for example Gemini 4 Argon and Gemini 3.8 Flash. |
 
 Every request runs `agy --print` in **plan mode with the sandbox on**, so Gemini can read and search but cannot change your files or run commands. MCP tools from your own agy config are denied for these runs: they could act outside your computer, and headless agy can't ask you about them.
+
+**Known limitation, Antigravity CLI 1.5.** Run headless, agy can't get approval to read or write files, and in tests it ignored allow rules for them. `gemini_ask` works around this by sending the files' text with the prompt. `gemini_code` can't: it stops after about half a minute with agy's explanation, and changes nothing. Until agy fixes this, use Jules (`jules_start`) for code changes.
 
 ### Media through the Gemini API
 

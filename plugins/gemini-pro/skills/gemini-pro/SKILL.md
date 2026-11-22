@@ -14,7 +14,7 @@ which tool covers a benefit, call `google_pro_benefits` first.
 |---|---|---|
 | A second opinion on code, a diff, a design or local files | `gemini_ask` with `paths` | Plan limits, no API cost |
 | Current facts, releases, prices or docs, with sources | `gemini_research` | Plan limits |
-| A local change made by Gemini in one folder | `gemini_code` | Plan limits; **edits files** |
+| A local change made by Gemini in one folder | `gemini_code` | Plan limits; **edits files**. Currently blocked by agy, see below. |
 | A GitHub task that ends in a branch or PR | `jules_sources`, then `jules_start` | Plan's Jules limits |
 | Answers grounded only in their documents | `notebook_create`, then `notebook_ask` | Plan limits |
 | A podcast, slides, mind map or quiz from documents | `notebook_studio` | Plan limits; takes minutes |
@@ -46,6 +46,13 @@ repeat them, and say plainly where you and Gemini disagree. Keep the returned
 
 If the user named an Antigravity agent, call `gemini_agents` first and pass its
 name as `agent`.
+
+With Antigravity CLI 1.5, headless agy can't get approval to read or write files.
+gemini_code then returns agy's explanation ("a tool required the read_file
+permission...") and changes nothing. When that happens:
+- Don't retry.
+- Tell the user.
+- Make the change yourself, or offer Jules (`jules_start`) for a GitHub repository.
 
 **Jules.**
 - Get the exact repo name from `jules_sources`.
