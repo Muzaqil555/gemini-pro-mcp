@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `gemini-pro-mcp setup` carries on when a client's own CLI (`claude mcp add`, `agy mcp add`) hangs for two minutes or cannot start. It marks that client as failed and prints the command to run by hand, where it used to stop with a `TimeoutExpired` traceback before the other clients.
+
 ## 0.1.6
 
 - `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.

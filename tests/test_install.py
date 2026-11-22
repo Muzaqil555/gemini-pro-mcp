@@ -141,3 +141,13 @@ def test_key_check(monkeypatch):
     monkeypatch.setenv("JULES_API_KEY", "secret")
     found = install.key_check("Jules", ("JULES_API_KEY",), "jules tools", "https://x")
     assert found.ok is True and "secret" not in found.detail
+
+
+def test_run_commands_reports_a_hanging_client(monkeypatch):
+    def hang(command, **kwargs):
+        raise install.subprocess.TimeoutExpired(command, kwargs["timeout"])
+
+    monkeypatch.setattr(install.subprocess, "run", hang)
+    ok, detail = install.run_commands([["claude", "mcp", "add", "x"]], dry_run=False)
+    assert ok is False
+    assert "timed out" in detail and "add it by hand: claude mcp add x" in detail
