@@ -38,8 +38,8 @@ def lock_for(host: str) -> asyncio.Lock:
 
 def find_chrome() -> str | None:
     custom = os.environ.get("GEMINI_PRO_CHROME")
-    if custom:
-        return custom
+    if custom:  # a path, or a program name on PATH; None if it is neither
+        return shutil.which(custom)
     system = platform.system()
     candidates: list[Path | str | None] = []
     if system == "Windows":
@@ -60,6 +60,14 @@ def find_chrome() -> str | None:
     return None
 
 
+def chrome_missing() -> str:
+    """Why find_chrome() found nothing, and what to do."""
+    custom = os.environ.get("GEMINI_PRO_CHROME")
+    if custom:
+        return f"GEMINI_PRO_CHROME is set to {custom!r}, which is not a program; fix or unset it"
+    return "install Google Chrome or set GEMINI_PRO_CHROME to its path"
+
+
 def port_open(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.settimeout(0.5)
@@ -72,9 +80,7 @@ def launch_chrome(settings: Settings, url: str = FLOW_URL) -> None:
         return
     chrome = find_chrome()
     if not chrome:
-        raise FlowError(
-            "Google Chrome was not found. Install it or set GEMINI_PRO_CHROME to its path."
-        )
+        raise FlowError(f"Google Chrome was not found: {chrome_missing()}.")
     settings.flow_profile_dir.mkdir(parents=True, exist_ok=True)
     args = [
         chrome,

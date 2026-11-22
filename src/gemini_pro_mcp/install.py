@@ -78,7 +78,7 @@ def key_check(name: str, variables: tuple[str, ...], purpose: str, where: str) -
 
 
 def browser_checks(settings: Settings) -> list[Check]:
-    from .flow.browser import find_chrome
+    from .flow.browser import chrome_missing, find_chrome
 
     checks = []
     if importlib.util.find_spec("playwright") is None:
@@ -96,7 +96,7 @@ def browser_checks(settings: Settings) -> list[Check]:
     checks.append(
         Check("Chrome", True, chrome)
         if chrome
-        else Check("Chrome", None, "not found: install Google Chrome or set GEMINI_PRO_CHROME")
+        else Check("Chrome", None, f"not found: {chrome_missing()}")
     )
     if settings.flow_profile_dir.is_dir():
         checks.append(Check("Flow profile", True, str(settings.flow_profile_dir)))

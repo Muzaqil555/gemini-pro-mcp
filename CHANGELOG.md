@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- A `GEMINI_PRO_CHROME` that is not a program is reported as such. `doctor` used to show it as `[ok]` Chrome, and the browser tools then failed with a `FileNotFoundError` and a request to report a changed page. It may also be a program name on PATH, such as `chromium`.
+
 ## 0.1.6
 
 - `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.
