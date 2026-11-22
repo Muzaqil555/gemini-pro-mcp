@@ -9,6 +9,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import signal
+import sys
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -21,6 +24,11 @@ from .config import Settings
 
 # Windows limits a command line to 32 767 characters; keep room for the rest.
 MAX_PROMPT_CHARS = 24_000
+
+# After agy prints its answer, it can keep running for minutes while it shuts down,
+# because it stops every MCP server in the user's agy config. Once the answer is in,
+# run_agy gives agy this long to exit, then stops it.
+EXIT_GRACE_SECONDS = 10.0
 
 Effort = Literal["low", "medium", "high", "xhigh", "max"]
 
@@ -49,6 +57,7 @@ class AgyResult:
     status: str = ""
     duration_seconds: float | None = None
     usage: dict = field(default_factory=dict)
+    finished_reason: str = ""
 
 
 def build_args(
@@ -88,19 +97,26 @@ def build_args(
     return args
 
 
-def parse_output(stdout: str) -> AgyResult:
-    """Reads agy's JSON result (the last JSON object it printed)."""
-    text = stdout.strip()
+def last_json_object(text: str) -> dict | None:
+    """The JSON object that agy's output ends with, or None if it doesn't end with one."""
+    text = text.strip()
     start = text.rfind("\n{")
     candidates = [text] if start == -1 else [text, text[start + 1 :]]
-    data = None
     for candidate in candidates:
         try:
             data = json.loads(candidate)
-            break
         except json.JSONDecodeError:
             continue
-    if not isinstance(data, dict):
+        if isinstance(data, dict):
+            return data
+    return None
+
+
+def parse_output(stdout: str) -> AgyResult:
+    """Reads agy's JSON result (the last JSON object it printed)."""
+    data = last_json_object(stdout)
+    if data is None:
+        text = stdout.strip()
         raise AgyError(f"Unexpected output from agy: {text[:500] or '(empty)'}")
     result = AgyResult(
         response=str(data.get("response") or "").strip(),
@@ -108,6 +124,7 @@ def parse_output(stdout: str) -> AgyResult:
         status=str(data.get("status") or ""),
         duration_seconds=data.get("duration_seconds"),
         usage=data.get("usage") or {},
+        finished_reason=str(data.get("finished_reason") or ""),
     )
     if result.status and result.status.upper() != "SUCCESS":
         raise AgyError(f"agy finished with status {result.status}: {result.response[:500]}")
@@ -136,25 +153,87 @@ def workspace_for(paths: list[str] | None) -> tuple[Path, list[Path], list[Path]
     return scratch, [], files
 
 
+async def stop_process_tree(process: asyncio.subprocess.Process) -> None:
+    """Stops agy together with the processes it started, such as its MCP servers."""
+    if process.returncode is not None:
+        return
+    if sys.platform == "win32":
+        try:
+            killer = await asyncio.create_subprocess_exec(
+                "taskkill",
+                "/PID",
+                str(process.pid),
+                "/T",
+                "/F",
+                stdin=asyncio.subprocess.DEVNULL,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+            await asyncio.wait_for(killer.wait(), 15)
+        except (OSError, asyncio.TimeoutError):
+            pass
+    else:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)  # its own group: see run_agy
+        except OSError:
+            pass
+    try:
+        process.kill()  # in case the tree kill missed it
+    except OSError:
+        pass
+    try:
+        await asyncio.wait_for(process.wait(), 15)
+    except asyncio.TimeoutError:
+        pass
+
+
 async def run_agy(args: list[str], cwd: Path, timeout: int) -> str:
+    """Runs agy and returns what it printed.
+
+    Returns as soon as agy has printed a complete JSON result, after giving it
+    EXIT_GRACE_SECONDS to exit by itself, rather than waiting for a slow shutdown.
+    """
     process = await asyncio.create_subprocess_exec(
         *args,
         cwd=str(cwd),
         stdin=asyncio.subprocess.DEVNULL,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        start_new_session=sys.platform != "win32",  # lets stop_process_tree reach its children
     )
+    stderr_task = asyncio.ensure_future(process.stderr.read())
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + timeout + 30
+    out = bytearray()
     try:
-        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout + 30)
+        while True:
+            chunk = await asyncio.wait_for(
+                process.stdout.read(65536), max(deadline - loop.time(), 0.1)
+            )
+            if not chunk:
+                await asyncio.wait_for(process.wait(), max(deadline - loop.time(), 0.1))
+                break
+            out += chunk
+            if last_json_object(out.decode("utf-8", errors="replace")) is not None:
+                try:
+                    await asyncio.wait_for(process.wait(), EXIT_GRACE_SECONDS)
+                except asyncio.TimeoutError:
+                    await stop_process_tree(process)
+                break
     except asyncio.TimeoutError:
-        process.kill()
-        await process.wait()
+        await stop_process_tree(process)
+        stderr_task.cancel()
         raise AgyError(f"agy did not answer within {timeout} s.") from None
-    out = stdout.decode("utf-8", errors="replace")
-    if process.returncode != 0 and not out.strip():
-        err = stderr.decode("utf-8", errors="replace").strip()
+    try:
+        err_bytes = await asyncio.wait_for(stderr_task, 5)
+    except asyncio.TimeoutError:
+        stderr_task.cancel()
+        err_bytes = b""
+    text = out.decode("utf-8", errors="replace")
+    if process.returncode != 0 and not text.strip():
+        err = err_bytes.decode("utf-8", errors="replace").strip()
         raise AgyError(f"agy exited with code {process.returncode}: {err[:800]}")
-    return out
+    return text
 
 
 async def ask(
@@ -201,7 +280,15 @@ def format_result(result: AgyResult) -> str:
         footer.append(f"conversation_id: {result.conversation_id} (pass it to continue)")
     if result.duration_seconds is not None:
         footer.append(f"took {result.duration_seconds:.0f} s")
-    return result.response + ("\n\n---\n" + " · ".join(footer) if footer else "")
+    body = result.response
+    if not body:
+        reason = f" (finished_reason: {result.finished_reason})" if result.finished_reason else ""
+        body = (
+            f"Gemini returned no text{reason}. Ask again, passing the conversation_id "
+            "below, or rephrase the request. After gemini_code, check the folder with "
+            "`git diff`: Gemini may have changed files anyway."
+        )
+    return body + ("\n\n---\n" + " · ".join(footer) if footer else "")
 
 
 def parse_models(stdout: str) -> list[tuple[str, str]]:

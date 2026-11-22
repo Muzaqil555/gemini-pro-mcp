@@ -1,6 +1,9 @@
 import dataclasses
 import json
+import os
+import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -104,3 +107,70 @@ async def test_run_agy_reports_exit_code(tmp_path):
     script = "import sys; sys.stderr.write('not signed in'); sys.exit(3)"
     with pytest.raises(agy.AgyError, match="code 3: not signed in"):
         await agy.run_agy([sys.executable, "-c", script], Path(tmp_path), 30)
+
+
+async def test_run_agy_returns_once_the_result_is_printed(tmp_path, monkeypatch):
+    """agy can hang for minutes after its answer while it stops its MCP servers."""
+    monkeypatch.setattr(agy, "EXIT_GRACE_SECONDS", 0.5)
+    pid_file = tmp_path / "child.pid"
+    script = (
+        "import json, os, subprocess, sys, time\n"
+        # A child that would outlive agy if only agy itself were stopped.
+        "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(120)'])\n"
+        f"open({str(pid_file)!r}, 'w').write(str(child.pid))\n"
+        "print(json.dumps({'status': 'SUCCESS', 'response': 'done'}), flush=True)\n"
+        "time.sleep(120)\n"
+    )
+    started = time.monotonic()
+    out = await agy.run_agy([sys.executable, "-c", script], Path(tmp_path), 300)
+    assert time.monotonic() - started < 60
+    assert agy.parse_output(out).response == "done"
+    assert not _running(int(pid_file.read_text()))
+
+
+def _running(pid: int) -> bool:
+    """Whether a process is still alive, without signalling it."""
+    if sys.platform == "win32":
+        out = subprocess.run(
+            ["tasklist", "/FI", f"PID eq {pid}", "/NH"], capture_output=True, text=True
+        ).stdout
+        return str(pid) in out
+    for _ in range(50):  # the killed child may take a moment to be reaped
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        try:
+            waited, _status = os.waitpid(pid, os.WNOHANG)
+        except ChildProcessError:
+            waited = 0
+        if waited:
+            return False
+        time.sleep(0.1)
+    return True
+
+
+async def test_run_agy_still_waits_for_plain_text_output(tmp_path):
+    script = (
+        "import time; print('gemini-4-argon-high  Gemini 4 Argon'); time.sleep(1); print('end')"
+    )
+    out = await agy.run_agy([sys.executable, "-c", script], Path(tmp_path), 30)
+    assert "end" in out
+
+
+def test_format_result_says_when_gemini_returned_no_text():
+    result = agy.parse_output(
+        json.dumps(
+            {
+                "status": "SUCCESS",
+                "response": "",
+                "conversation_id": "c1",
+                "finished_reason": "interrupted",
+            }
+        )
+    )
+    text = agy.format_result(result)
+    assert "Gemini returned no text (finished_reason: interrupted)" in text
+    assert "conversation_id: c1" in text
