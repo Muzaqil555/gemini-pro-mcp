@@ -160,9 +160,12 @@ class Media:
         failed = failure_text(interaction)
         if failed:
             return failed
+        data = await self.download(interaction.output_video)
+        # Forget the wanted name only once the file is saved, so that a retry
+        # with video_check after a failed download still uses it.
         name = self.names.pop(interaction.id, None) or make_file_name("video", None, "mp4")
         path = self.save_path(name)
-        path.write_bytes(await self.download(interaction.output_video))
+        path.write_bytes(data)
         return (
             f"Saved: {path} ({path.stat().st_size / 1024 / 1024:.1f} MB)\n"
             f"id: {interaction.id} (pass it to video_edit to change or extend this video)"

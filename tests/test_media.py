@@ -100,6 +100,16 @@ async def test_video_generate_returns_id_when_slow(setup):
     assert "video_check" in result and "int-1" in result
 
 
+async def test_video_check_keeps_file_name_after_failed_download(setup):
+    server, use, tmp = setup
+    fake = use(FakeInteractions({"output_video": SimpleNamespace(data=None, uri=None)}))
+    result = text_of(await server.call_tool("video_generate", {"prompt": "x", "file_name": "ball"}))
+    assert result.startswith("Error:")
+    fake.output = video_output()
+    result = text_of(await server.call_tool("video_check", {"id": "int-1"}))
+    assert f"Saved: {tmp / 'out' / 'ball.mp4'}" in result
+
+
 async def test_video_edit_needs_exactly_one_source(setup):
     server, use, _ = setup
     use(FakeInteractions(video_output()))

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `video_check` saves the video under the `file_name` given to `video_generate` or `video_edit` when an earlier download of it failed. The name used to be dropped before the download, so a retry saved the file under a default date-and-prompt name.
+
 ## 0.1.6
 
 - `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.
