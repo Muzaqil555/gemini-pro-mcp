@@ -25,7 +25,7 @@
       "command": "uvx",
       "args": [
         "--from",
-        "git+https://github.com/Muzaqil555/gemini-pro-mcp@8f9df7e1d4193ff8234165944953496ca0f2fef6",
+        "git+https://github.com/Muzaqil555/gemini-pro-mcp@b304325917a2949c6cbbc2d94b893548a73c4703",
         "gemini-pro-mcp"
       ]
     }
