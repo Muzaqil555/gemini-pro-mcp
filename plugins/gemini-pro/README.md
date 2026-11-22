@@ -16,6 +16,17 @@ Use your Google AI Pro subscription from Claude Code. This plugin adds one local
 - Build a Gemini Notebook from your documents and make an Audio Overview.
 - Make a video of any length in Google Flow with the plan's monthly credits.
 
+## Commands
+
+| Command | What it does |
+|---|---|
+| `/gemini-pro:gemini-review [focus]` | Gemini reviews your current changes. Claude then checks each point against the code. |
+| `/gemini-pro:gemini-research <question>` | Research on the live web with Gemini and Google Search. The answer lists its sources. |
+| `/gemini-pro:jules <task>` | Hands a task on your GitHub repository to Jules. You confirm it first, and Jules waits for you to approve its plan. |
+| `/gemini-pro:notebook <files or links> [question or output]` | Builds a Gemini Notebook, then answers a question or makes an Audio Overview, slides, a mind map and more. |
+
+The plugin also has a skill that tells Claude which tool fits which request. It also marks which tools cost money and which change files.
+
 ## What you need
 
 - [uv](https://docs.astral.sh/uv/), which starts the server.
@@ -24,7 +35,7 @@ Use your Google AI Pro subscription from Claude Code. This plugin adds one local
 
 ## What the plugin runs
 
-The plugin starts the server with `uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp@<commit> gemini-pro-mcp`, where `<commit>` is the full commit of the released version. uv fetches that commit from GitHub, installs it with its dependencies from PyPI, and runs it on your computer over stdio. You need git for this. The plugin has no hooks, skills, commands or agents.
+The plugin starts the server with `uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp@<commit> gemini-pro-mcp`, where `<commit>` is the full commit of the released version. uv fetches that commit from GitHub, installs it with its dependencies from PyPI, and runs it on your computer over stdio. You need git for this. Besides the server, the plugin holds one skill and four commands, all plain Markdown instructions for Claude. It has no hooks and no agents, and none of its files run code.
 
 The server then runs or connects to these, only when you call the matching tool:
 

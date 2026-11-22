@@ -1,0 +1,23 @@
+---
+description: Get Gemini's second opinion on the current changes, then weigh it against the code
+argument-hint: "[what to focus on, or a branch/commit to compare against]"
+---
+
+Get an independent review of the current changes from Gemini, through the
+`gemini_ask` tool of the gemini-pro MCP server, which runs on the user's Google AI Pro plan.
+
+Focus or base from the user: $ARGUMENTS
+
+1. Collect the changes:
+   - Run `git status` and `git diff` (staged and unstaged).
+   - If the user named a branch or commit, diff against it instead.
+   - If there is nothing to review, say so and stop.
+2. Write the diff to a temporary file. Call `gemini_ask` with:
+   - `paths`: that file, plus the changed files themselves, so Gemini sees the context;
+   - `prompt`: ask for correctness bugs, edge cases, security problems and missing tests,
+     each tied to a file and line and ranked by severity. Include the user's focus, if
+     they gave one.
+3. Check every point Gemini raises against the code yourself. Keep only the ones
+   that hold up, and say which of Gemini's points you dropped and why.
+4. Report the confirmed findings, most severe first. Change no code unless the user
+   asks.
