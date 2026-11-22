@@ -434,17 +434,20 @@ Answer with only a JSON array of exactly {count} strings, nothing else."""
 
 
 def parse_shots(text: str, count: int) -> list[str] | None:
-    match = re.search(r"\[.*\]", text, re.S)
-    if not match:
-        return None
-    try:
-        shots = json.loads(match.group(0))
-    except json.JSONDecodeError:
-        return None
-    if not isinstance(shots, list) or len(shots) != count:
-        return None
-    shots = [str(s).strip() for s in shots]
-    return shots if all(shots) else None
+    """The first JSON array of `count` prompts in Gemini's answer, which may have
+    prose with brackets such as "[0-8s]" or "[1]" before or after it."""
+    decoder = json.JSONDecoder()
+    for match in re.finditer(r"\[", text):
+        try:
+            shots, _ = decoder.raw_decode(text, match.start())
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(shots, list) or len(shots) != count:
+            continue
+        shots = [str(s).strip() for s in shots]
+        if all(shots):
+            return shots
+    return None
 
 
 async def plan_shots(settings: Settings, idea: str, lengths: list[int], aspect: str) -> list[str]:
