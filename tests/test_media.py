@@ -166,3 +166,17 @@ def test_message_of_reads_nested_body():
     error.body = [{"error": {"code": 400, "message": "API key not valid."}}]
     assert media.message_of(error) == "API key not valid."
     assert "GEMINI_API_KEY" in media.describe_api_error(error)
+
+
+@pytest.mark.parametrize(
+    ("wanted", "extension", "expected"),
+    [
+        ("demo-v1.2", "mp4", "demo-v1.2.mp4"),
+        ("trip.2026", "mp4", "trip.2026.mp4"),
+        ("clip.mov", "mp4", "clip.mp4"),
+        ("cat.jpg", "png", "cat.png"),
+        ("out/../intro.mp4", "mp4", "intro.mp4"),
+    ],
+)
+def test_make_file_name_keeps_dots_that_are_not_an_extension(wanted, extension, expected):
+    assert media.make_file_name("prompt", wanted, extension) == expected

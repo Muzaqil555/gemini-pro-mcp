@@ -227,7 +227,10 @@ def image_part(path: str) -> dict:
 
 def make_file_name(prompt: str, wanted: str | None, extension: str) -> str:
     if wanted:
-        stem = Path(wanted).stem
+        stem = Path(wanted).name
+        # Drop a media extension ("clip.mov"), keep other dots ("demo-v1.2").
+        if (mimetypes.guess_type(stem)[0] or "").startswith(("video/", "image/", "audio/")):
+            stem = Path(stem).stem
     else:
         slug = re.sub(r"[^a-zA-Z0-9]+", "-", prompt.lower()).strip("-")[:40]
         stem = f"{datetime.now():%Y%m%d-%H%M%S}-{slug or 'output'}"
