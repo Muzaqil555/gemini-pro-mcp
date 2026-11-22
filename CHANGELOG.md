@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `flow_make_video` finds the clips of an earlier run again when `file_name` contains `[`, `]`, `*` or `?`. The name was used as a glob pattern, so a resumed job did not see the clips it had already saved and generated them again, spending Flow credits a second time.
+
 ## 0.1.6
 
 - `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.
