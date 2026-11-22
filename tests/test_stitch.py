@@ -54,6 +54,16 @@ async def test_stitch_reports_missing_clip(tmp_path):
         await stitch.stitch([tmp_path / "nope.mp4"], tmp_path / "out.mp4")
 
 
+async def test_stitch_fails_on_an_unreadable_clip(tmp_path):
+    good, bad = tmp_path / "a.mp4", tmp_path / "b.mp4"
+    make_clip(good, 1, "red")
+    bad.write_bytes(b"not a video" * 100)
+    out = tmp_path / "out.mp4"
+    with pytest.raises(stitch.StitchError, match="b.mp4"):
+        await stitch.stitch([good, bad], out)
+    assert not out.exists()
+
+
 def test_unique_path(tmp_path):
     (tmp_path / "v.mp4").write_bytes(b"")
     assert stitch.unique_path(tmp_path, "v", ".mp4").name == "v-2.mp4"

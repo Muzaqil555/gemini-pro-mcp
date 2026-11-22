@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `video_stitch` reports an error when one of the clips can't be read (for example a truncated download). ffmpeg stopped at that clip but exited successfully, so the tool said "Saved" for a video that was missing every clip from that one on. A failed join no longer leaves a partial file in the output folder.
+
 ## 0.1.6
 
 - `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.
