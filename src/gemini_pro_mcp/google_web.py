@@ -387,7 +387,10 @@ def register(mcp: MCPServer, settings: Settings) -> None:
             The answer text, saved media and whether it is finished.
         """
         try:
-            check_url(chat_url, operate=True)
+            if check_url(chat_url, operate=True) != "gemini.google.com":
+                raise FlowError(
+                    "chat_url must be a Gemini app chat (https://gemini.google.com/...)."
+                )
             async with Tab(settings, "gemini.google.com") as tab:
                 await tab.goto(chat_url, settle_ms=6000)
                 state = await wait_for_answer(tab.page, 0, wait_seconds)
