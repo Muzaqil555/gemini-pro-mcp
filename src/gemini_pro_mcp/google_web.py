@@ -224,6 +224,8 @@ def register(mcp: MCPServer, settings: Settings) -> None:
         """
         try:
             host = check_url(url, operate=False) if url else (site or _last_host["value"])
+            if host not in OPERATE | READ_ONLY_SITES:
+                check_url(f"https://{host}/", operate=False)  # raises with the allowed list
             async with Tab(settings, host) as tab:
                 if url:
                     await tab.goto(url)
