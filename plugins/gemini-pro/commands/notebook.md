@@ -21,3 +21,14 @@ $ARGUMENTS
    - for a Studio output, call `notebook_studio` with a large `wait_seconds` (audio and
      video take minutes) and give the path of any downloaded file.
 4. If no question or output was given, create the notebook, give its link, and stop.
+
+If the notebook_* tools are not available yet because the gemini-pro server is still
+connecting, tell the user it is starting up: the first start installs it, which takes
+a minute or two. Ask them to run the command again shortly.
+
+If the server is up but has no notebook_* tools, the browser tools are not set up.
+The plugin's own server leaves them out. Tell the user to run these once, sign in to
+Google in the window that opens, and restart Claude Code:
+
+    uvx gemini-pro-mcp setup --client claude --browser
+    uvx --from "gemini-pro-mcp[flow]" gemini-pro-mcp flow-login

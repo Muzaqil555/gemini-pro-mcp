@@ -19,3 +19,7 @@ $ARGUMENTS
 5. Give the user the session link. Tell them they can ask you to check it later
    (`jules_status`) and to approve the plan (`jules_approve_plan`) once they have
    read it. Don't poll in a loop.
+
+If the jules_* tools are not available yet because the gemini-pro server is still
+connecting, tell the user it is starting up: the first start installs it, which takes
+a minute or two. Ask them to run the command again shortly.

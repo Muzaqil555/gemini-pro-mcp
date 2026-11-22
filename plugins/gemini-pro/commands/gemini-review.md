@@ -21,3 +21,8 @@ Focus or base from the user: $ARGUMENTS
    that hold up, and say which of Gemini's points you dropped and why.
 4. Report the confirmed findings, most severe first. Change no code unless the user
    asks.
+
+If `gemini_ask` is not available yet because the gemini-pro server is still
+connecting, tell the user it is starting up: the first start installs it, which takes
+a minute or two. Ask them to run the command again shortly. Don't present a review of
+your own as Gemini's.

@@ -6,6 +6,8 @@
 - The Claude Code plugin has a skill that tells Claude which tool fits a request, and four commands: `/gemini-pro:gemini-review`, `/gemini-pro:gemini-research`, `/gemini-pro:jules` and `/gemini-pro:notebook`.
 - Sign-in and Flow page checks compare the page's host instead of searching the URL text.
 - CI runs with a read-only `GITHUB_TOKEN`.
+- `video_stitch` uses the `ffmpeg` on PATH when the bundled one (the `flow` extra) is not installed, as in the Claude Code plugin and the Gemini CLI extension.
+- Plugin: the commands and the skill tell the user to try again while the server is still starting for the first time, and say how to add the browser tools, which the plugin's server leaves out.
 - Installable as a Gemini CLI extension (`gemini extensions install https://github.com/Muzaqil555/gemini-pro-mcp`) and as a Claude Code plugin (`/plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp`).
 
 ## 0.1.5

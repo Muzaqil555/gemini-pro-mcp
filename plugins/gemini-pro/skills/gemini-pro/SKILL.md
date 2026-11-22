@@ -62,16 +62,24 @@ to the user's Google Cloud project. Settle the prompt, aspect ratio and resoluti
 before you call them. Never retry a paid call just to "try again": each call is
 charged. Afterwards, report the file path and the cost.
 
-**Flow and browser tools (`flow_*`, `gemini_app`, `google_*`).** These are
-experimental and off unless the user enabled them. They drive a Chrome profile the
-user signed in to.
-- If they fail because they are disabled or signed out, say so and point to
-  `uvx gemini-pro-mcp doctor`.
+**Flow and browser tools (`flow_*`, `notebook_*`, `gemini_app`, `google_*`).** These
+are experimental. They drive a Chrome profile that the user signed in to.
+- The plugin's own server never has them. They come from the full server, which the
+  user adds with `uvx gemini-pro-mcp setup --client claude --browser`, followed once
+  by `uvx --from "gemini-pro-mcp[flow]" gemini-pro-mcp flow-login`.
+- If the tools are missing, say so and give those two commands.
+- If the tools fail because the user is signed out, point to the `flow-login` command.
 - Never type the user's password.
 
 ## When something is missing
 
-Run `uvx gemini-pro-mcp doctor`. It shows what is set up and how to fix the rest:
+If the gemini-pro tools are not available yet and the server is still connecting,
+it is probably starting for the first time. The first start downloads and installs
+it, which takes a minute or two; later starts take a few seconds. Tell the user, and
+ask them to try again shortly. Don't fall back to other tools or answer from
+memory instead.
+
+Otherwise, run `uvx gemini-pro-mcp doctor`. It shows what is set up and how to fix the rest:
 - the Antigravity CLI sign-in;
 - `JULES_API_KEY`;
 - `GEMINI_API_KEY`;

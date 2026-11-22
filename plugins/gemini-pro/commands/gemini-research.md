@@ -14,3 +14,8 @@ $ARGUMENTS
    Point out where sources disagree, and any source that looks stale.
 3. Keep the returned `conversation_id`. If the user asks a follow-up, pass it to
    `gemini_ask`.
+
+If `gemini_research` is not available yet because the gemini-pro server is still
+connecting, tell the user it is starting up: the first start installs it, which takes
+a minute or two. Ask them to run the command again shortly. Don't answer from memory
+or from other tools instead.
