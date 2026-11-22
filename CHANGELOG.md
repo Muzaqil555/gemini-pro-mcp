@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `jules_status`, `jules_approve_plan` and `jules_message` accept a Jules web link with a trailing slash, a query string or a `#` fragment. Before, the session id came out empty or with `?...` attached, and the call went to the wrong API path.
+
 ## 0.1.6
 
 - `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.

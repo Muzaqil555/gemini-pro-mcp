@@ -53,7 +53,9 @@ async def call(method: str, path: str, body: dict | None = None, params: dict | 
 
 
 def session_id(value: str) -> str:
-    return value.rsplit("/", 1)[-1]
+    """Session id from an id, a "sessions/<id>" name or a web link."""
+    path = value.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
+    return path.rsplit("/", 1)[-1]
 
 
 def describe_activity(activity: dict[str, Any]) -> str:
