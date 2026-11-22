@@ -95,7 +95,7 @@ class Flow:
     async def _page(self):
         pages = [page for context in self.browser.contexts for page in context.pages]
         for page in pages:
-            if "flow.google.com" in page.url:
+            if flow_page_lib.on_host(page.url, "flow.google.com"):
                 return page
         context = self.browser.contexts[0]
         page = await context.new_page()
@@ -103,7 +103,8 @@ class Flow:
         return page
 
     def signed_out(self) -> bool:
-        return "accounts.google.com" in self.page.url or "/about" in self.page.url
+        url = self.page.url
+        return flow_page_lib.on_host(url, "accounts.google.com") or "/about" in url
 
     async def open_project(self, project_id: str | None = None) -> str:
         """Opens the given, configured, current or most recent project."""

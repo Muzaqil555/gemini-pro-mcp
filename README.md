@@ -131,7 +131,7 @@ gemini mcp add gemini-pro uvx gemini-pro-mcp
 
 Settings go in as environment variables, e.g. `agy mcp add --env GEMINI_PRO_ENABLE_BROWSER=1 gemini-pro -- ...`, or in the `.env` file below.
 
-**As a Gemini CLI extension or a Claude Code plugin.** Both only add the server; run `uvx gemini-pro-mcp doctor` afterwards to see what works.
+**As a Gemini CLI extension or a Claude Code plugin.** Both add the server; run `uvx gemini-pro-mcp doctor` afterwards to see what works. The Claude Code plugin also adds four commands: `/gemini-pro:gemini-review` (Gemini reviews your diff, then Claude checks each point), `/gemini-pro:gemini-research`, `/gemini-pro:jules` and `/gemini-pro:notebook`. It also adds a skill that picks the right tool for each request.
 
 ```bash
 gemini extensions install https://github.com/Muzaqil555/gemini-pro-mcp

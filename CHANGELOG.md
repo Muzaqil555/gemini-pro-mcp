@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- `video_generate` and `video_edit` use `gemini-omni-1.2-flash`. Google shuts down `gemini-omni-1.1-flash` on 2026-12-03 and routes its requests to 1.2.
+- The Claude Code plugin has a skill that tells Claude which tool fits a request, and four commands: `/gemini-pro:gemini-review`, `/gemini-pro:gemini-research`, `/gemini-pro:jules` and `/gemini-pro:notebook`.
+- Sign-in and Flow page checks compare the page's host instead of searching the URL text.
+- CI runs with a read-only `GITHUB_TOKEN`.
 - Installable as a Gemini CLI extension (`gemini extensions install https://github.com/Muzaqil555/gemini-pro-mcp`) and as a Claude Code plugin (`/plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp`).
 
 ## 0.1.5

@@ -33,7 +33,7 @@ try:  # The Interactions API raises its own error classes.
 except ImportError:  # pragma: no cover - other SDK versions
     API_ERRORS = (errors.APIError,)
 
-VIDEO_MODEL = "gemini-omni-1.1-flash"
+VIDEO_MODEL = "gemini-omni-1.2-flash"  # 1.1 shuts down on 2026-12-03
 POLL_SECONDS = 10
 MAX_IMAGE_BYTES = 20 * 1024 * 1024
 
