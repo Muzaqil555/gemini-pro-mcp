@@ -76,6 +76,18 @@ def notebook_id(value: str) -> str:
     return match.group(1)
 
 
+def download_path(folder: Path, suggested: str) -> Path:
+    """A path in `folder` for a download that never replaces an existing file."""
+    name = Path(Path(suggested or "notebook-download").name)
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / name
+    n = 2
+    while path.exists():
+        path = folder / f"{name.stem}-{n}{name.suffix}"
+        n += 1
+    return path
+
+
 async def click_text(page, text: str, timeout: int = 10_000) -> None:
     target = page.get_by_role("button", name=re.compile(re.escape(text), re.I)).or_(
         page.get_by_text(text, exact=True)
@@ -291,9 +303,7 @@ def register(mcp: MCPServer, settings: Settings) -> None:
                                 "menuitem", name=re.compile("Download", re.I)
                             ).first.click()
                         download = await info.value
-                        folder = settings.output_dir
-                        folder.mkdir(parents=True, exist_ok=True)
-                        path = folder / download.suggested_filename
+                        path = download_path(settings.output_dir, download.suggested_filename)
                         await download.save_as(path)
                         saved.append(path)
                     except Exception:

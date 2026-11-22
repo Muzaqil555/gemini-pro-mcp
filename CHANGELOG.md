@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `notebook_studio` no longer overwrites an earlier Audio or Video Overview that Notebook downloads under the same file name. The new file gets a `-2`, `-3`... suffix, as `flow_*` and the media tools already do.
+
 ## 0.1.6
 
 - `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.
