@@ -13,7 +13,10 @@ Focus or base from the user: $ARGUMENTS
    - If the user named a branch or commit, diff against it instead.
    - If there is nothing to review, say so and stop.
 2. Write the diff to a temporary file. Call `gemini_ask` with:
-   - `paths`: that file, plus the changed files themselves, so Gemini sees the context;
+   - `paths`: that file, plus the changed files themselves, so Gemini sees the context.
+     The server puts the text of each file up to 20 000 characters into the prompt,
+     about 22 000 characters in all. If the diff is bigger, review it in parts, one call
+     per group of files;
    - `prompt`: ask for correctness bugs, edge cases, security problems and missing tests,
      each tied to a file and line and ranked by severity. Include the user's focus, if
      they gave one.

@@ -30,7 +30,7 @@ def test_build_args_is_read_only_and_sandboxed():
     assert args[args.index("--effort") + 1] == "high"
     # Print mode can't ask before an MCP tool runs: it ends the turn with no answer.
     session = json.loads(args[args.index("--settings") + 1])
-    assert session["permissions"]["deny"] == ["mcp(*)"]
+    assert session["permissions"]["deny"] == ["mcp(*)", "command(*)"]
 
 
 def test_parse_output_success():
@@ -89,6 +89,7 @@ async def test_ask_passes_files_and_model(settings, tmp_path, monkeypatch):
     assert result.response == "ok"
     prompt = seen["args"][seen["args"].index("--print") + 1]
     assert str(f.resolve()) in prompt and prompt.endswith("summarize")
+    assert "\nhello\n" in prompt  # the file text itself, so Gemini needs no file access
     assert seen["args"][seen["args"].index("--model") + 1] == "gemini-q"
     assert seen["cwd"] == tmp_path.resolve()
 
@@ -188,3 +189,18 @@ async def test_ask_explains_an_empty_answer_with_what_agy_said(settings, monkeyp
     text = agy.format_result(await agy.ask(settings, "hi"))
     assert text.startswith("Gemini returned no text.")
     assert "agy said: jetski: no output produced" in text
+
+
+def test_with_files_includes_small_text_files_and_lists_the_rest(tmp_path):
+    small = tmp_path / "small.py"
+    small.write_bytes(b"print('hi')\n")  # bytes: Windows would write \r\n
+    big = tmp_path / "big.txt"
+    big.write_text("x" * (agy.EMBED_FILE_MAX_CHARS + 1), encoding="utf-8")
+    binary = tmp_path / "image.png"
+    binary.write_bytes(b"\x89PNG\x00\x00data")
+    prompt = agy.with_files("Review it.", [small, big, binary])
+    assert f"<file path=\"{small}\">\nprint('hi')\n\n</file>" in prompt
+    assert f"- {big}" in prompt and f"- {binary}" in prompt
+    assert "x" * 100 not in prompt
+    assert prompt.endswith("Review it.")
+    assert len(prompt) < agy.MAX_PROMPT_CHARS

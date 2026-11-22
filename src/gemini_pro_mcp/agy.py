@@ -30,13 +30,21 @@ MAX_PROMPT_CHARS = 24_000
 # run_agy gives agy this long to exit, then stops it.
 EXIT_GRACE_SECONDS = 10.0
 
-# Settings for these agy runs only. agy asks before it runs an MCP tool, and in print
-# mode it can't ask: it denies the tool and ends the turn with no answer. Gemini reaches
-# for MCP tools from the user's agy config often, for example a search server during
-# web research. Those servers can also act outside the machine, such as sending mail or
-# spending credits. These runs deny every MCP tool, so Gemini sticks to agy's built-in
-# tools and the read-only tools stay read-only.
-SESSION_SETTINGS = json.dumps({"permissions": {"deny": ["mcp(*)"]}})
+# Settings for these agy runs only. agy asks before it runs an MCP tool or a terminal
+# command, and in print mode it can't ask: it denies the tool and ends the whole turn
+# with no answer. Gemini reaches for both often. During web research, for example, it
+# tries a search server from the user's agy config or a `curl`. A deny rule instead
+# tells Gemini the tool is off, and it carries on with agy's built-in tools. MCP
+# servers can also act outside the machine (send mail, spend credits), so denying them
+# keeps the read-only tools read-only.
+SESSION_SETTINGS = json.dumps({"permissions": {"deny": ["mcp(*)", "command(*)"]}})
+
+# agy's print mode also can't get approval to read a file. An allow rule should cover
+# that, but in tests with agy 1.5.14, reads under a matching read_file(...) allow rule
+# were still denied (see also google-antigravity/antigravity-cli#565). So the text of
+# small files passed in `paths` goes into the prompt itself, and Gemini doesn't need to
+# open them. Larger files are only listed by path.
+EMBED_FILE_MAX_CHARS = 20_000
 
 Effort = Literal["low", "medium", "high", "xhigh", "max"]
 
@@ -141,6 +149,44 @@ def parse_output(stdout: str) -> AgyResult:
     if result.status and result.status.upper() != "SUCCESS":
         raise AgyError(f"agy finished with status {result.status}: {result.response[:500]}")
     return result
+
+
+def read_text_file(path: Path) -> str | None:
+    """The file's text, or None if it is binary or can't be read."""
+    try:
+        data = path.read_bytes()
+    except OSError:
+        return None
+    if b"\x00" in data[:8192]:
+        return None
+    return data.decode("utf-8", errors="replace")
+
+
+def with_files(prompt: str, files: list[Path]) -> str:
+    """Puts the text of small files into the prompt, and lists the rest by path.
+
+    The total stays under MAX_PROMPT_CHARS, so the command line fits on Windows.
+    """
+    budget = MAX_PROMPT_CHARS - len(prompt) - 2_000
+    included: list[str] = []
+    listed: list[Path] = []
+    for path in files:
+        text = read_text_file(path)
+        block = f'<file path="{path}">\n{text}\n</file>' if text is not None else ""
+        if text is not None and len(text) <= EMBED_FILE_MAX_CHARS and len(block) <= budget:
+            included.append(block)
+            budget -= len(block)
+        else:
+            listed.append(path)
+    parts = []
+    if included:
+        parts.append(
+            "The full text of these files is included below; you don't need to open them.\n\n"
+            + "\n\n".join(included)
+        )
+    if listed:
+        parts.append("Files to use:\n" + "\n".join(f"- {path}" for path in listed))
+    return "\n\n".join([*parts, prompt])
 
 
 def workspace_for(paths: list[str] | None) -> tuple[Path, list[Path], list[Path]]:
@@ -271,12 +317,11 @@ async def ask(
     workdir, extra_dirs, files = workspace_for(paths)
     cwd = cwd or workdir
     if files:
-        listed = "\n".join(f"- {f}" for f in files)
-        prompt = f"Files to use:\n{listed}\n\n{prompt}"
+        prompt = with_files(prompt, files)
     if len(prompt) > MAX_PROMPT_CHARS:
         raise AgyError(
-            f"Prompt is {len(prompt)} characters (limit {MAX_PROMPT_CHARS}). Save the "
-            "long text to a file and pass its path in `paths` instead."
+            f"Prompt is {len(prompt)} characters (limit {MAX_PROMPT_CHARS}), with the "
+            "text of any files in `paths`. Split the work into smaller requests."
         )
     args = build_args(
         settings.agy_path,
@@ -344,17 +389,20 @@ def register(mcp: MCPServer, settings: Settings) -> None:
         """Ask Gemini a question or give it a reading task, through the Antigravity
         CLI on the user's Google AI Pro plan (no API cost; uses the plan's limits).
 
-        Good for a second opinion on code or a design, reviewing local files or
-        folders passed in `paths`, and long reasoning. Gemini runs read-only in a
-        sandbox: it can read those paths and search the web but cannot change
-        files or run commands. For web research with cited sources use
+        Good for a second opinion on code or a design, reviewing local files passed
+        in `paths`, and long reasoning. The text of each file up to 20 000
+        characters goes into the prompt, so pass the files themselves; Gemini
+        can't open folders or larger files on its own when the Antigravity CLI
+        runs headless. Gemini runs read-only: it can search the web but cannot
+        change files or run commands. For web research with cited sources use
         gemini_research; to let Gemini edit a folder use gemini_code.
 
         Args:
             prompt: The question or task.
             model: Model id from gemini_models (e.g. "gemini-3.8-flash-medium");
                 default is agy's (or GEMINI_PRO_AGY_MODEL).
-            paths: Local files or folders Gemini may read.
+            paths: Local files for Gemini to read; their text is sent with the
+                prompt (about 22 000 characters in all).
             conversation_id: Continue an earlier gemini_ask/gemini_research chat.
             effort: Reasoning effort: low, medium, high, xhigh or max.
 

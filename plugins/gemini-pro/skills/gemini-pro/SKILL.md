@@ -28,7 +28,10 @@ for a specific or stronger model.
 ## How to work with each group
 
 **gemini_ask / gemini_research.** Gemini runs read-only. Give it what it needs:
-- the exact paths, not "the project";
+- the exact files, not "the project" or a folder. The server puts the text of each
+  file up to 20 000 characters into the prompt, about 22 000 characters in all. Gemini
+  can't open folders or bigger files itself, because headless agy can't get approval to
+  read them. Split bigger reviews into several calls;
 - the question, and what a good answer contains.
 
 Treat its answer as one opinion. Check its claims against the code before you
