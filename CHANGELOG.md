@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `gemini-pro-mcp setup` handles a Gemini CLI `settings.json` that is valid JSON but not the expected shape. `"mcpServers": null` is treated as empty; a top-level array or a non-object `mcpServers` marks the Gemini CLI as failed with a message, and setup carries on with the other clients. It used to stop with a `TypeError` or `AttributeError`.
+
 ## 0.1.6
 
 - `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.
