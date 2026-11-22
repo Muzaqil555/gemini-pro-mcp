@@ -2,9 +2,9 @@
 
 Flow has dozens of tools (Image Editor, Video Resizer, Transition Machine,
 community tools...), each a small app with its own interface, often inside an
-iframe. Instead of one MCP tool per Flow tool, `flow_page` shows the model the
-page as text with numbered elements and `flow_act` clicks, types or uploads
-files on them, the way a person would. Restricted to flow.google.com.
+iframe. Instead of one MCP tool per Flow tool, `google_page` shows the model the
+page as text with numbered elements and `google_act` clicks, types or uploads
+files on them, the way a person would. google_web decides which sites they may open.
 """
 
 from __future__ import annotations
@@ -154,7 +154,7 @@ def frame_for(page, ref: str):
         f for f in page.frames if f != page.main_frame and not any(s in f.url for s in SKIP_FRAMES)
     ]
     if index >= len(frames):
-        raise ValueError(f"Frame of {ref} is gone; call flow_page again.")
+        raise ValueError(f"Frame of {ref} is gone; call google_page again.")
     return frames[index]
 
 
@@ -206,7 +206,7 @@ async def _act(page, ref: str, action: str, text: str | None, files: list[str] |
         raise ValueError("Sign-in pages are never operated; the user signs in.")
     target = frame_for(page, ref).locator(f'[data-gpm-ref="{ref}"]').first
     if not await target.count():
-        raise ValueError(f"No element [{ref}] (the page changed); call flow_page again.")
+        raise ValueError(f"No element [{ref}] (the page changed); call google_page again.")
     if (await target.get_attribute("type")) == "password":
         raise ValueError("Typing into password fields is not allowed.")
 
