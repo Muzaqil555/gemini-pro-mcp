@@ -45,9 +45,14 @@ async def call(method: str, path: str, body: dict | None = None, params: dict | 
         )
     if response.status_code >= 400:
         try:
-            message = response.json().get("error", {}).get("message", response.text)
+            data = response.json()
         except ValueError:
-            message = response.text
+            data = None
+        if isinstance(data, list) and data:  # some Google APIs wrap the error in a list
+            data = data[0]
+        error = data.get("error") if isinstance(data, dict) else None
+        message = error.get("message") if isinstance(error, dict) else None
+        message = str(message or response.text)
         raise JulesError(f"Jules API {response.status_code}: {message[:500]}")
     return response.json() if response.content else {}
 

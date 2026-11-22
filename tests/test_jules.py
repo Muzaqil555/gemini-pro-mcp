@@ -1,5 +1,6 @@
 import dataclasses
 
+import httpx
 import pytest
 from mcp.server.mcpserver import MCPServer
 
@@ -69,6 +70,25 @@ async def test_jules_status_shows_pr_and_activity(server):
     assert "COMPLETED" in out
     assert "https://github.com/o/r/pull/7" in out
     assert "planGenerated: Read code" in out
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"error": {"code": 400, "message": "Invalid source"}},
+        [{"error": {"code": 400, "message": "Invalid source"}}],
+        ["Invalid source"],
+    ],
+)
+async def test_call_explains_api_errors_of_any_shape(monkeypatch, body):
+    monkeypatch.setenv("JULES_API_KEY", "test")
+    transport = httpx.MockTransport(lambda request: httpx.Response(400, json=body))
+    real_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        jules.httpx, "AsyncClient", lambda **kw: real_client(transport=transport, **kw)
+    )
+    with pytest.raises(jules.JulesError, match="Jules API 400: .*Invalid source"):
+        await jules.call("GET", "sessions")
 
 
 def test_jules_needs_a_key(monkeypatch):
