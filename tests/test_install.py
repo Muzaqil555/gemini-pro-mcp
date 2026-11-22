@@ -42,6 +42,14 @@ def test_codex_config_replaces_only_this_server():
     assert "GEMINI_PRO_ENABLE_BROWSER" not in again
 
 
+def test_codex_config_keeps_comment_of_next_table():
+    old = install.codex_config("", "gemini-pro", COMMAND, ARGS, {})
+    old += '\n# Docs search, added by hand\n[mcp_servers.docs]\ncommand = "docs"\n'
+    text = install.codex_config(old, "gemini-pro", COMMAND, ARGS, {})
+    assert "# Docs search, added by hand\n[mcp_servers.docs]" in text
+    assert text.count('[mcp_servers."gemini-pro"]') == 1
+
+
 def test_codex_config_escapes_windows_paths():
     text = install.codex_config("", "gemini-pro", r"C:\Users\me\uv.exe", [], {})
     assert text.startswith('[mcp_servers."gemini-pro"]')

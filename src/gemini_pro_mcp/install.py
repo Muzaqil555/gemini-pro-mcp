@@ -230,12 +230,22 @@ def codex_config(text: str, name: str, command: str, args: list[str], env: dict[
     """Codex's config.toml with this server's tables replaced and everything else kept."""
     mine = f"mcp_servers.{name}"
     kept, current = [], None
+    # Comments and blank lines at the end of this server's tables usually belong
+    # to the table after them, so they are dropped only if no other table follows.
+    pending: list[str] = []
     for line in text.splitlines():
         match = HEADER.match(line)
         if match:
             current = _table(match.group(1))
         if current == mine or (current or "").startswith(mine + "."):
+            stripped = line.strip()
+            if match or (stripped and not stripped.startswith("#")):
+                pending.clear()
+            else:
+                pending.append(line)
             continue
+        kept += pending
+        pending.clear()
         kept.append(line)
     while kept and not kept[-1].strip():
         kept.pop()
