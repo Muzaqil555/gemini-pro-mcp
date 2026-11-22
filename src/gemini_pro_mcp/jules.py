@@ -185,7 +185,7 @@ def register(mcp: MCPServer, settings: Settings) -> None:
                 pr = output.get("pullRequest")
                 if pr:
                     lines.append(f"Pull request: {pr.get('url')} ({pr.get('title', '')})")
-            items = acts.get("activities", [])[-activities:]
+            items = acts.get("activities", [])[-activities:] if activities > 0 else []
             if items:
                 lines.append("Recent activity:")
                 lines += [describe_activity(a) for a in items]

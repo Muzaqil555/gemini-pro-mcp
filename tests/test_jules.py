@@ -71,6 +71,13 @@ async def test_jules_status_shows_pr_and_activity(server):
     assert "planGenerated: Read code" in out
 
 
+async def test_jules_status_with_zero_activities_shows_none(server):
+    mcp, _ = server
+    out = text_of(await mcp.call_tool("jules_status", {"session": "123", "activities": 0}))
+    assert "COMPLETED" in out
+    assert "Recent activity" not in out
+
+
 def test_jules_needs_a_key(monkeypatch):
     monkeypatch.delenv("JULES_API_KEY", raising=False)
     with pytest.raises(jules.JulesError, match="jules.google.com/settings"):
