@@ -11,8 +11,15 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlparse
 
 ALLOWED = "https://flow.google.com/"
+
+
+def on_host(url: str, host: str) -> bool:
+    """True when `url` is served from `host` itself (not just mentioning it)."""
+    return (urlparse(url).hostname or "").lower() == host
+
 
 # Numbers every visible interactive element (data-gpm-ref) and returns them
 # with the page text. `prefix` distinguishes iframes ("f1:", "f2:", ...).
@@ -195,7 +202,7 @@ async def act(
 
 
 async def _act(page, ref: str, action: str, text: str | None, files: list[str] | None) -> None:
-    if "accounts.google.com" in page.url:
+    if on_host(page.url, "accounts.google.com"):
         raise ValueError("Sign-in pages are never operated; the user signs in.")
     target = frame_for(page, ref).locator(f'[data-gpm-ref="{ref}"]').first
     if not await target.count():

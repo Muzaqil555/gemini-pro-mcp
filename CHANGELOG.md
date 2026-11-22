@@ -1,7 +1,17 @@
 # Changelog
 
-## Unreleased
+## 0.1.6
 
+- `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.
+- `gemini_research` came back empty whenever Gemini reached for a search tool from an MCP server in the user's agy config, or for a terminal command such as `curl`. Headless agy can't ask for those permissions, so it ended the turn. These agy runs now deny MCP tools and terminal commands (`--settings`), so Gemini uses agy's built-in web search. This also keeps `gemini_ask` and `gemini_research` read-only when the user's agy has MCP servers that send mail or spend credits.
+- `gemini_ask` puts the text of the files in `paths` into the prompt: up to 20 000 characters per file, about 22 000 in all. Headless agy can't get approval to read files, and in tests it ignored a matching `read_file(...)` allow rule. So Gemini couldn't open the files, and the answer came back empty. Folders and bigger files are listed by path only.
+- Known issue: with Antigravity CLI 1.5, `gemini_code` can't edit files. Headless agy can't get approval to read or write them. The tool now stops after about half a minute with agy's explanation, where it used to hang for 10 minutes. Use Jules (`jules_start`) for code changes until agy fixes this.
+- `video_generate` and `video_edit` use `gemini-omni-1.2-flash`. Google shuts down `gemini-omni-1.1-flash` on 2026-12-03 and routes its requests to 1.2.
+- The Claude Code plugin has a skill that tells Claude which tool fits a request, and four commands: `/gemini-pro:gemini-review`, `/gemini-pro:gemini-research`, `/gemini-pro:jules` and `/gemini-pro:notebook`.
+- Sign-in and Flow page checks compare the page's host instead of searching the URL text.
+- CI runs with a read-only `GITHUB_TOKEN`.
+- `video_stitch` uses the `ffmpeg` on PATH when the bundled one (the `flow` extra) is not installed, as in the Claude Code plugin and the Gemini CLI extension.
+- Plugin: the commands and the skill tell the user to try again while the server is still starting for the first time, and say how to add the browser tools, which the plugin's server leaves out.
 - Installable as a Gemini CLI extension (`gemini extensions install https://github.com/Muzaqil555/gemini-pro-mcp`) and as a Claude Code plugin (`/plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp`).
 
 ## 0.1.5

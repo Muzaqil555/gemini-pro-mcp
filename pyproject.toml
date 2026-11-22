@@ -1,6 +1,6 @@
 [project]
 name = "gemini-pro-mcp"
-version = "0.1.5"
+version = "0.1.6"
 description = "Use your Google AI Pro subscription from Claude, Codex, Antigravity and Gemini CLI: Gemini via the Antigravity CLI, Deep Research, Flow video, Gemini Notebooks, Jules, plus Omni video and Nano Banana images. One-command setup. MCP server."
 readme = "README.md"
 license = "MIT"
@@ -80,4 +80,5 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]

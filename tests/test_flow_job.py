@@ -46,3 +46,13 @@ async def test_a_queued_clip_is_collected_not_paid_for_again(tmp_path, monkeypat
     assert path == tmp_path / "clip-01.mp4"
     assert FakeFlow.sent == 1
     assert FakeFlow.collected == 2
+
+
+def test_on_host_matches_the_host_not_the_url_text():
+    from gemini_pro_mcp.flow.page import on_host
+
+    assert on_host("https://accounts.google.com/v3/signin?x=1", "accounts.google.com")
+    assert on_host("https://FLOW.google.com/project/1", "flow.google.com")
+    assert not on_host("https://evil.example/?next=accounts.google.com", "accounts.google.com")
+    assert not on_host("https://accounts.google.com.evil.example/", "accounts.google.com")
+    assert not on_host("not a url", "flow.google.com")

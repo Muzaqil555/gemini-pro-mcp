@@ -9,6 +9,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import signal
+import sys
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -22,6 +25,27 @@ from .config import Settings
 # Windows limits a command line to 32 767 characters; keep room for the rest.
 MAX_PROMPT_CHARS = 24_000
 
+# After agy prints its answer, it can keep running for minutes while it shuts down,
+# because it stops every MCP server in the user's agy config. Once the answer is in,
+# run_agy gives agy this long to exit, then stops it.
+EXIT_GRACE_SECONDS = 10.0
+
+# Settings for these agy runs only. agy asks before it runs an MCP tool or a terminal
+# command, and in print mode it can't ask: it denies the tool and ends the whole turn
+# with no answer. Gemini reaches for both often. During web research, for example, it
+# tries a search server from the user's agy config or a `curl`. A deny rule instead
+# tells Gemini the tool is off, and it carries on with agy's built-in tools. MCP
+# servers can also act outside the machine (send mail, spend credits), so denying them
+# keeps the read-only tools read-only.
+SESSION_SETTINGS = json.dumps({"permissions": {"deny": ["mcp(*)", "command(*)"]}})
+
+# agy's print mode also can't get approval to read a file. An allow rule should cover
+# that, but in tests with agy 1.5.14, reads under a matching read_file(...) allow rule
+# were still denied (see also google-antigravity/antigravity-cli#565). So the text of
+# small files passed in `paths` goes into the prompt itself, and Gemini doesn't need to
+# open them. Larger files are only listed by path.
+EMBED_FILE_MAX_CHARS = 20_000
+
 Effort = Literal["low", "medium", "high", "xhigh", "max"]
 
 INSTALL_HINT = (
@@ -31,6 +55,7 @@ INSTALL_HINT = (
 )
 
 RESEARCH_PROMPT = """Research the question below using web search.
+- Use your built-in web search and page-reading tools.
 - Prefer primary and official sources; cross-check key facts in more than one source.
 - Say plainly when sources disagree or when something could not be verified.
 - End with a "Sources" list of the URLs you used.
@@ -49,6 +74,8 @@ class AgyResult:
     status: str = ""
     duration_seconds: float | None = None
     usage: dict = field(default_factory=dict)
+    finished_reason: str = ""
+    notice: str = ""  # what agy wrote to stderr, kept when the answer is empty
 
 
 def build_args(
@@ -74,6 +101,8 @@ def build_args(
         "--sandbox",
         "--print-timeout",
         f"{timeout}s",
+        "--settings",
+        SESSION_SETTINGS,
     ]
     if model:
         args += ["--model", model]
@@ -88,19 +117,26 @@ def build_args(
     return args
 
 
-def parse_output(stdout: str) -> AgyResult:
-    """Reads agy's JSON result (the last JSON object it printed)."""
-    text = stdout.strip()
+def last_json_object(text: str) -> dict | None:
+    """The JSON object that agy's output ends with, or None if it doesn't end with one."""
+    text = text.strip()
     start = text.rfind("\n{")
     candidates = [text] if start == -1 else [text, text[start + 1 :]]
-    data = None
     for candidate in candidates:
         try:
             data = json.loads(candidate)
-            break
         except json.JSONDecodeError:
             continue
-    if not isinstance(data, dict):
+        if isinstance(data, dict):
+            return data
+    return None
+
+
+def parse_output(stdout: str) -> AgyResult:
+    """Reads agy's JSON result (the last JSON object it printed)."""
+    data = last_json_object(stdout)
+    if data is None:
+        text = stdout.strip()
         raise AgyError(f"Unexpected output from agy: {text[:500] or '(empty)'}")
     result = AgyResult(
         response=str(data.get("response") or "").strip(),
@@ -108,10 +144,49 @@ def parse_output(stdout: str) -> AgyResult:
         status=str(data.get("status") or ""),
         duration_seconds=data.get("duration_seconds"),
         usage=data.get("usage") or {},
+        finished_reason=str(data.get("finished_reason") or ""),
     )
     if result.status and result.status.upper() != "SUCCESS":
         raise AgyError(f"agy finished with status {result.status}: {result.response[:500]}")
     return result
+
+
+def read_text_file(path: Path) -> str | None:
+    """The file's text, or None if it is binary or can't be read."""
+    try:
+        data = path.read_bytes()
+    except OSError:
+        return None
+    if b"\x00" in data[:8192]:
+        return None
+    return data.decode("utf-8", errors="replace")
+
+
+def with_files(prompt: str, files: list[Path]) -> str:
+    """Puts the text of small files into the prompt, and lists the rest by path.
+
+    The total stays under MAX_PROMPT_CHARS, so the command line fits on Windows.
+    """
+    budget = MAX_PROMPT_CHARS - len(prompt) - 2_000
+    included: list[str] = []
+    listed: list[Path] = []
+    for path in files:
+        text = read_text_file(path)
+        block = f'<file path="{path}">\n{text}\n</file>' if text is not None else ""
+        if text is not None and len(text) <= EMBED_FILE_MAX_CHARS and len(block) <= budget:
+            included.append(block)
+            budget -= len(block)
+        else:
+            listed.append(path)
+    parts = []
+    if included:
+        parts.append(
+            "The full text of these files is included below; you don't need to open them.\n\n"
+            + "\n\n".join(included)
+        )
+    if listed:
+        parts.append("Files to use:\n" + "\n".join(f"- {path}" for path in listed))
+    return "\n\n".join([*parts, prompt])
 
 
 def workspace_for(paths: list[str] | None) -> tuple[Path, list[Path], list[Path]]:
@@ -136,25 +211,93 @@ def workspace_for(paths: list[str] | None) -> tuple[Path, list[Path], list[Path]
     return scratch, [], files
 
 
+async def stop_process_tree(process: asyncio.subprocess.Process) -> None:
+    """Stops agy together with the processes it started, such as its MCP servers."""
+    if process.returncode is not None:
+        return
+    if sys.platform == "win32":
+        try:
+            killer = await asyncio.create_subprocess_exec(
+                "taskkill",
+                "/PID",
+                str(process.pid),
+                "/T",
+                "/F",
+                stdin=asyncio.subprocess.DEVNULL,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+            await asyncio.wait_for(killer.wait(), 15)
+        except (OSError, asyncio.TimeoutError):
+            pass
+    else:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)  # its own group: see run_agy
+        except OSError:
+            pass
+    try:
+        process.kill()  # in case the tree kill missed it
+    except OSError:
+        pass
+    try:
+        await asyncio.wait_for(process.wait(), 15)
+    except asyncio.TimeoutError:
+        pass
+
+
 async def run_agy(args: list[str], cwd: Path, timeout: int) -> str:
+    """Runs agy and returns what it printed to stdout (see run_agy_capture)."""
+    out, _err = await run_agy_capture(args, cwd, timeout)
+    return out
+
+
+async def run_agy_capture(args: list[str], cwd: Path, timeout: int) -> tuple[str, str]:
+    """Runs agy and returns what it printed to stdout and to stderr.
+
+    Returns as soon as agy has printed a complete JSON result, after giving it
+    EXIT_GRACE_SECONDS to exit by itself, rather than waiting for a slow shutdown.
+    """
     process = await asyncio.create_subprocess_exec(
         *args,
         cwd=str(cwd),
         stdin=asyncio.subprocess.DEVNULL,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        start_new_session=sys.platform != "win32",  # lets stop_process_tree reach its children
     )
+    stderr_task = asyncio.ensure_future(process.stderr.read())
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + timeout + 30
+    out = bytearray()
     try:
-        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout + 30)
+        while True:
+            chunk = await asyncio.wait_for(
+                process.stdout.read(65536), max(deadline - loop.time(), 0.1)
+            )
+            if not chunk:
+                await asyncio.wait_for(process.wait(), max(deadline - loop.time(), 0.1))
+                break
+            out += chunk
+            if last_json_object(out.decode("utf-8", errors="replace")) is not None:
+                try:
+                    await asyncio.wait_for(process.wait(), EXIT_GRACE_SECONDS)
+                except asyncio.TimeoutError:
+                    await stop_process_tree(process)
+                break
     except asyncio.TimeoutError:
-        process.kill()
-        await process.wait()
+        await stop_process_tree(process)
+        stderr_task.cancel()
         raise AgyError(f"agy did not answer within {timeout} s.") from None
-    out = stdout.decode("utf-8", errors="replace")
-    if process.returncode != 0 and not out.strip():
-        err = stderr.decode("utf-8", errors="replace").strip()
+    try:
+        err_bytes = await asyncio.wait_for(stderr_task, 5)
+    except asyncio.TimeoutError:
+        stderr_task.cancel()
+        err_bytes = b""
+    text = out.decode("utf-8", errors="replace")
+    err = err_bytes.decode("utf-8", errors="replace").strip()
+    if process.returncode != 0 and not text.strip():
         raise AgyError(f"agy exited with code {process.returncode}: {err[:800]}")
-    return out
+    return text, err
 
 
 async def ask(
@@ -174,12 +317,11 @@ async def ask(
     workdir, extra_dirs, files = workspace_for(paths)
     cwd = cwd or workdir
     if files:
-        listed = "\n".join(f"- {f}" for f in files)
-        prompt = f"Files to use:\n{listed}\n\n{prompt}"
+        prompt = with_files(prompt, files)
     if len(prompt) > MAX_PROMPT_CHARS:
         raise AgyError(
-            f"Prompt is {len(prompt)} characters (limit {MAX_PROMPT_CHARS}). Save the "
-            "long text to a file and pass its path in `paths` instead."
+            f"Prompt is {len(prompt)} characters (limit {MAX_PROMPT_CHARS}), with the "
+            "text of any files in `paths`. Split the work into smaller requests."
         )
     args = build_args(
         settings.agy_path,
@@ -192,7 +334,11 @@ async def ask(
         mode=mode,
         agent=agent,
     )
-    return parse_output(await run_agy(args, cwd, settings.agy_timeout))
+    out, err = await run_agy_capture(args, cwd, settings.agy_timeout)
+    result = parse_output(out)
+    if not result.response and err:
+        result.notice = err[-500:]
+    return result
 
 
 def format_result(result: AgyResult) -> str:
@@ -201,7 +347,17 @@ def format_result(result: AgyResult) -> str:
         footer.append(f"conversation_id: {result.conversation_id} (pass it to continue)")
     if result.duration_seconds is not None:
         footer.append(f"took {result.duration_seconds:.0f} s")
-    return result.response + ("\n\n---\n" + " · ".join(footer) if footer else "")
+    body = result.response
+    if not body:
+        reason = f" (finished_reason: {result.finished_reason})" if result.finished_reason else ""
+        body = (
+            f"Gemini returned no text{reason}. Ask again, passing the conversation_id "
+            "below, or rephrase the request. After gemini_code, check the folder with "
+            "`git diff`: Gemini may have changed files anyway."
+        )
+        if result.notice:
+            body += f"\nagy said: {result.notice}"
+    return body + ("\n\n---\n" + " · ".join(footer) if footer else "")
 
 
 def parse_models(stdout: str) -> list[tuple[str, str]]:
@@ -233,17 +389,20 @@ def register(mcp: MCPServer, settings: Settings) -> None:
         """Ask Gemini a question or give it a reading task, through the Antigravity
         CLI on the user's Google AI Pro plan (no API cost; uses the plan's limits).
 
-        Good for a second opinion on code or a design, reviewing local files or
-        folders passed in `paths`, and long reasoning. Gemini runs read-only in a
-        sandbox: it can read those paths and search the web but cannot change
-        files or run commands. For web research with cited sources use
+        Good for a second opinion on code or a design, reviewing local files passed
+        in `paths`, and long reasoning. The text of each file up to 20 000
+        characters goes into the prompt, so pass the files themselves; Gemini
+        can't open folders or larger files on its own when the Antigravity CLI
+        runs headless. Gemini runs read-only: it can search the web but cannot
+        change files or run commands. For web research with cited sources use
         gemini_research; to let Gemini edit a folder use gemini_code.
 
         Args:
             prompt: The question or task.
             model: Model id from gemini_models (e.g. "gemini-3.8-flash-medium");
                 default is agy's (or GEMINI_PRO_AGY_MODEL).
-            paths: Local files or folders Gemini may read.
+            paths: Local files for Gemini to read; their text is sent with the
+                prompt (about 22 000 characters in all).
             conversation_id: Continue an earlier gemini_ask/gemini_research chat.
             effort: Reasoning effort: low, medium, high, xhigh or max.
 
@@ -276,8 +435,8 @@ def register(mcp: MCPServer, settings: Settings) -> None:
 
         Runs through the Antigravity CLI on the user's Google AI Pro plan: no API
         cost, uses the plan's limits. Read-only. Gemini prefers official sources,
-        cross-checks key facts and says when sources disagree. Usually takes about
-        a minute. For questions about local files use gemini_ask instead.
+        cross-checks key facts and says when sources disagree. Usually takes one
+        to three minutes. For questions about local files use gemini_ask instead.
 
         Args:
             question: What to find out, with context that narrows it, e.g.
@@ -318,8 +477,11 @@ def register(mcp: MCPServer, settings: Settings) -> None:
         """Delegate a coding task to Gemini, which reads and EDITS files in one
         local folder through the Antigravity agent on the user's Google AI Pro plan
         (no API cost). This changes files: tell the user, and review the result
-        afterwards, e.g. with `git diff`. Terminal commands run in a sandbox and
-        only the given folder is writable.
+        afterwards, e.g. with `git diff`. Gemini can't run terminal commands here,
+        so run the tests yourself afterwards. Antigravity CLI 1.5 can't get approval
+        for file access when it runs headless. Then this tool returns agy's
+        explanation within about a minute and changes nothing; use jules_start
+        instead.
 
         Good for a well-defined change: fix a bug, add tests, refactor a module.
         For read-only questions use gemini_ask; for a task on a GitHub repo that

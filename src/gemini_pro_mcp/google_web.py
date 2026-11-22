@@ -101,7 +101,7 @@ class Tab:
     async def goto(self, url: str, settle_ms: int = 4000) -> None:
         await self.page.goto(with_english(url), wait_until="domcontentloaded")
         await self.page.wait_for_timeout(settle_ms)
-        if "accounts.google.com" in self.page.url:
+        if page_lib.on_host(self.page.url, "accounts.google.com"):
             raise FlowError(
                 "Not signed in. Ask the user to run `gemini-pro-mcp flow-login` and sign "
                 "in to Google in that window (they must do it themselves)."

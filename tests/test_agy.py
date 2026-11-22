@@ -1,6 +1,9 @@
 import dataclasses
 import json
+import os
+import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -25,6 +28,9 @@ def test_build_args_is_read_only_and_sandboxed():
     assert args[args.index("--model") + 1] == "m"
     assert args[args.index("--conversation") + 1] == "c1"
     assert args[args.index("--effort") + 1] == "high"
+    # Print mode can't ask before an MCP tool runs: it ends the turn with no answer.
+    session = json.loads(args[args.index("--settings") + 1])
+    assert session["permissions"]["deny"] == ["mcp(*)", "command(*)"]
 
 
 def test_parse_output_success():
@@ -76,13 +82,14 @@ async def test_ask_passes_files_and_model(settings, tmp_path, monkeypatch):
 
     async def fake_run(args, cwd, timeout):
         seen["args"], seen["cwd"] = args, cwd
-        return json.dumps({"status": "SUCCESS", "response": "ok", "conversation_id": "z"})
+        return json.dumps({"status": "SUCCESS", "response": "ok", "conversation_id": "z"}), ""
 
-    monkeypatch.setattr(agy, "run_agy", fake_run)
+    monkeypatch.setattr(agy, "run_agy_capture", fake_run)
     result = await agy.ask(settings, "summarize", model="gemini-q", paths=[str(f)])
     assert result.response == "ok"
     prompt = seen["args"][seen["args"].index("--print") + 1]
     assert str(f.resolve()) in prompt and prompt.endswith("summarize")
+    assert "\nhello\n" in prompt  # the file text itself, so Gemini needs no file access
     assert seen["args"][seen["args"].index("--model") + 1] == "gemini-q"
     assert seen["cwd"] == tmp_path.resolve()
 
@@ -104,3 +111,96 @@ async def test_run_agy_reports_exit_code(tmp_path):
     script = "import sys; sys.stderr.write('not signed in'); sys.exit(3)"
     with pytest.raises(agy.AgyError, match="code 3: not signed in"):
         await agy.run_agy([sys.executable, "-c", script], Path(tmp_path), 30)
+
+
+async def test_run_agy_returns_once_the_result_is_printed(tmp_path, monkeypatch):
+    """agy can hang for minutes after its answer while it stops its MCP servers."""
+    monkeypatch.setattr(agy, "EXIT_GRACE_SECONDS", 0.5)
+    pid_file = tmp_path / "child.pid"
+    script = (
+        "import json, os, subprocess, sys, time\n"
+        # A child that would outlive agy if only agy itself were stopped.
+        "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(120)'])\n"
+        f"open({str(pid_file)!r}, 'w').write(str(child.pid))\n"
+        "print(json.dumps({'status': 'SUCCESS', 'response': 'done'}), flush=True)\n"
+        "time.sleep(120)\n"
+    )
+    started = time.monotonic()
+    out = await agy.run_agy([sys.executable, "-c", script], Path(tmp_path), 300)
+    assert time.monotonic() - started < 60
+    assert agy.parse_output(out).response == "done"
+    assert not _running(int(pid_file.read_text()))
+
+
+def _running(pid: int) -> bool:
+    """Whether a process is still alive, without signalling it."""
+    if sys.platform == "win32":
+        out = subprocess.run(
+            ["tasklist", "/FI", f"PID eq {pid}", "/NH"], capture_output=True, text=True
+        ).stdout
+        return str(pid) in out
+    for _ in range(50):  # the killed child may take a moment to be reaped
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        try:
+            waited, _status = os.waitpid(pid, os.WNOHANG)
+        except ChildProcessError:
+            waited = 0
+        if waited:
+            return False
+        time.sleep(0.1)
+    return True
+
+
+async def test_run_agy_still_waits_for_plain_text_output(tmp_path):
+    script = (
+        "import time; print('gemini-4-argon-high  Gemini 4 Argon'); time.sleep(1); print('end')"
+    )
+    out = await agy.run_agy([sys.executable, "-c", script], Path(tmp_path), 30)
+    assert "end" in out
+
+
+def test_format_result_says_when_gemini_returned_no_text():
+    result = agy.parse_output(
+        json.dumps(
+            {
+                "status": "SUCCESS",
+                "response": "",
+                "conversation_id": "c1",
+                "finished_reason": "interrupted",
+            }
+        )
+    )
+    text = agy.format_result(result)
+    assert "Gemini returned no text (finished_reason: interrupted)" in text
+    assert "conversation_id: c1" in text
+
+
+async def test_ask_explains_an_empty_answer_with_what_agy_said(settings, monkeypatch):
+    async def fake_run(args, cwd, timeout):
+        out = json.dumps({"status": "SUCCESS", "response": "", "conversation_id": "e1"})
+        return out, "jetski: no output produced - a tool required a permission"
+
+    monkeypatch.setattr(agy, "run_agy_capture", fake_run)
+    text = agy.format_result(await agy.ask(settings, "hi"))
+    assert text.startswith("Gemini returned no text.")
+    assert "agy said: jetski: no output produced" in text
+
+
+def test_with_files_includes_small_text_files_and_lists_the_rest(tmp_path):
+    small = tmp_path / "small.py"
+    small.write_bytes(b"print('hi')\n")  # bytes: Windows would write \r\n
+    big = tmp_path / "big.txt"
+    big.write_text("x" * (agy.EMBED_FILE_MAX_CHARS + 1), encoding="utf-8")
+    binary = tmp_path / "image.png"
+    binary.write_bytes(b"\x89PNG\x00\x00data")
+    prompt = agy.with_files("Review it.", [small, big, binary])
+    assert f"<file path=\"{small}\">\nprint('hi')\n\n</file>" in prompt
+    assert f"- {big}" in prompt and f"- {binary}" in prompt
+    assert "x" * 100 not in prompt
+    assert prompt.endswith("Review it.")
+    assert len(prompt) < agy.MAX_PROMPT_CHARS
