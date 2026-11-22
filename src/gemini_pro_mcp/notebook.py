@@ -84,18 +84,24 @@ async def click_text(page, text: str, timeout: int = 10_000) -> None:
     await page.wait_for_timeout(1200)
 
 
-async def add_sources(page, files: list[str], urls: list[str], text: str | None) -> list[str]:
-    """Uses the "Add sources" dialog. Returns notes on what was added."""
+def local_files(files: list[str] | None) -> list[str]:
+    """Resolves the files to upload, failing before any browser work if one is missing."""
+    paths = [str(Path(f).expanduser().resolve()) for f in files or []]
+    missing = [p for p in paths if not Path(p).is_file()]
+    if missing:
+        raise ValueError(f"Files not found: {missing}")
+    return paths
+
+
+async def add_sources(page, paths: list[str], urls: list[str], text: str | None) -> list[str]:
+    """Uses the "Add sources" dialog. `paths` come from local_files(). Returns notes
+    on what was added."""
     added = []
     dialog_open = await page.get_by_text("Copied text", exact=False).count()
     if not dialog_open:
         await page.locator('button[aria-label="Add source"]').first.click()
         await page.wait_for_timeout(1500)
-    if files:
-        paths = [str(Path(f).expanduser().resolve()) for f in files]
-        missing = [p for p in paths if not Path(p).is_file()]
-        if missing:
-            raise ValueError(f"Files not found: {missing}")
+    if paths:
         async with page.expect_file_chooser(timeout=15_000) as chooser:
             await click_text(page, "Upload files")
         await (await chooser.value).set_files(paths)
@@ -170,6 +176,7 @@ def register(mcp: MCPServer, settings: Settings) -> None:
             The new notebook's id and URL.
         """
         try:
+            paths = local_files(files)
             async with Tab(settings, HOST) as tab:
                 page = tab.page
                 await tab.goto(HOME, settle_ms=5000)
@@ -177,7 +184,7 @@ def register(mcp: MCPServer, settings: Settings) -> None:
                     'button[aria-label="New notebook"], button:has-text("Create notebook")'
                 ).first.click()
                 await page.wait_for_timeout(5000)
-                added = await add_sources(page, files or [], urls or [], text)
+                added = await add_sources(page, paths, urls or [], text)
                 new_id = notebook_id(page.url)
                 if title:
                     name = page.locator("input[type='text']").first
@@ -209,9 +216,10 @@ def register(mcp: MCPServer, settings: Settings) -> None:
             What was added.
         """
         try:
+            paths = local_files(files)
             async with Tab(settings, HOST) as tab:
                 await tab.goto(NOTEBOOK.format(id=notebook_id(notebook)), settle_ms=6000)
-                added = await add_sources(tab.page, files or [], urls or [], text)
+                added = await add_sources(tab.page, paths, urls or [], text)
                 return f"Added {', '.join(added) or 'nothing'}."
         except Exception as e:  # browser automation can fail in many ways
             return failure(e)
