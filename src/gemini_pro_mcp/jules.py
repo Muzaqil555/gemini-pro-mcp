@@ -56,6 +56,20 @@ def session_id(value: str) -> str:
     return value.rsplit("/", 1)[-1]
 
 
+async def list_activities(sid: str, max_pages: int = 20) -> list[dict[str, Any]]:
+    """All activities of a session, oldest first. The API pages them 100 at a
+    time, so the newest ones of a long session are on the last page."""
+    items: list[dict[str, Any]] = []
+    params: dict[str, Any] = {"pageSize": 100}
+    for _ in range(max_pages):
+        page = await call("GET", f"sessions/{sid}/activities", params=params)
+        items += page.get("activities", [])
+        if not page.get("nextPageToken"):
+            break
+        params = {"pageSize": 100, "pageToken": page["nextPageToken"]}
+    return items
+
+
 def describe_activity(activity: dict[str, Any]) -> str:
     kinds = [k for k in activity if k not in ("name", "id", "createTime", "originator")]
     kind = next((k for k in kinds if isinstance(activity[k], dict)), kinds[0] if kinds else "")
@@ -176,7 +190,7 @@ def register(mcp: MCPServer, settings: Settings) -> None:
         try:
             sid = session_id(session)
             data = await call("GET", f"sessions/{sid}")
-            acts = await call("GET", f"sessions/{sid}/activities", params={"pageSize": 100})
+            acts = await list_activities(sid)
             lines = [
                 f"Session {sid}: {data.get('title', '')}",
                 f"State: {data.get('state', 'unknown')}",
@@ -185,7 +199,7 @@ def register(mcp: MCPServer, settings: Settings) -> None:
                 pr = output.get("pullRequest")
                 if pr:
                     lines.append(f"Pull request: {pr.get('url')} ({pr.get('title', '')})")
-            items = acts.get("activities", [])[-activities:]
+            items = acts[-activities:]
             if items:
                 lines.append("Recent activity:")
                 lines += [describe_activity(a) for a in items]

@@ -71,6 +71,25 @@ async def test_jules_status_shows_pr_and_activity(server):
     assert "planGenerated: Read code" in out
 
 
+async def test_jules_status_reads_every_activity_page(monkeypatch):
+    async def fake_call(method, path, body=None, params=None):
+        if path == "sessions/9":
+            return {"title": "Long task", "state": "IN_PROGRESS"}
+        if params.get("pageToken") is None:
+            first = [{"progressUpdated": {"title": f"step {i}"}} for i in range(100)]
+            return {"activities": first, "nextPageToken": "p2"}
+        return {"activities": [{"progressUpdated": {"title": "latest step"}}]}
+
+    monkeypatch.setattr(jules, "call", fake_call)
+    mcp = MCPServer("test")
+    jules.register(mcp, Settings.from_env())
+    out = text_of(await mcp.call_tool("jules_status", {"session": "9", "activities": 2}))
+    assert out.splitlines()[-2:] == [
+        "-  progressUpdated: step 99",
+        "-  progressUpdated: latest step",
+    ]
+
+
 def test_jules_needs_a_key(monkeypatch):
     monkeypatch.delenv("JULES_API_KEY", raising=False)
     with pytest.raises(jules.JulesError, match="jules.google.com/settings"):

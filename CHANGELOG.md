@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `jules_status` follows the activity list's `nextPageToken`. It read only the first page of 100 activities, so for a long session the "recent activity" it showed stopped at activity 100 and never included the latest question, progress or completion.
+
 ## 0.1.6
 
 - `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.
