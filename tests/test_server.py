@@ -65,6 +65,22 @@ def test_only_google_ai_sites_are_opened():
         raise AssertionError(f"{url} should be refused")
 
 
+def test_pages_open_in_english():
+    from gemini_pro_mcp.google_web import with_english
+
+    assert with_english("https://gemini.google.com/app") == "https://gemini.google.com/app?hl=en"
+    assert (
+        with_english("https://colab.research.google.com/drive/abc#scrollTo=x1")
+        == "https://colab.research.google.com/drive/abc?hl=en#scrollTo=x1"
+    )
+    assert (
+        with_english("https://www.google.com/search?q=a&shl=1")
+        == "https://www.google.com/search?q=a&shl=1&hl=en"
+    )
+    assert with_english("https://www.google.com/search?hl=de&q=a").endswith("?hl=de&q=a")
+    assert with_english("https://www.flowmusic.app/") == "https://www.flowmusic.app/"
+
+
 def test_benefits_cover_the_plan():
     from gemini_pro_mcp import benefits
 

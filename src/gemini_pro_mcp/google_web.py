@@ -14,7 +14,7 @@ import re
 import time
 from pathlib import Path
 from typing import Literal
-from urllib.parse import quote_plus, urlparse
+from urllib.parse import parse_qsl, quote_plus, urlparse, urlsplit, urlunsplit
 
 from mcp.server.mcpserver import MCPServer
 from mcp_types import ToolAnnotations
@@ -70,9 +70,11 @@ def check_url(url: str, *, operate: bool) -> str:
 
 
 def with_english(url: str) -> str:
-    if "hl=" in url or "flowmusic.app" in url:
+    parts = urlsplit(url)
+    if "flowmusic.app" in parts.netloc or "hl" in dict(parse_qsl(parts.query)):
         return url
-    return url + ("&" if "?" in url else "?") + "hl=en"
+    query = f"{parts.query}&hl=en" if parts.query else "hl=en"
+    return urlunsplit(parts._replace(query=query))
 
 
 class Tab:
