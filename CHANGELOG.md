@@ -2,7 +2,8 @@
 
 ## 0.1.6
 
-- `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer.
+- `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.
+- `gemini_research` came back empty whenever Gemini tried a search tool from an MCP server in the user's agy config: headless agy can't ask for that permission, so it ended the turn. These agy runs now deny MCP tools (`--settings`), so Gemini uses agy's built-in web search. This also keeps `gemini_ask` and `gemini_research` read-only when the user's agy has MCP servers that send mail or spend credits.
 - `video_generate` and `video_edit` use `gemini-omni-1.2-flash`. Google shuts down `gemini-omni-1.1-flash` on 2026-12-03 and routes its requests to 1.2.
 - The Claude Code plugin has a skill that tells Claude which tool fits a request, and four commands: `/gemini-pro:gemini-review`, `/gemini-pro:gemini-research`, `/gemini-pro:jules` and `/gemini-pro:notebook`.
 - Sign-in and Flow page checks compare the page's host instead of searching the URL text.

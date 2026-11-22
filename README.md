@@ -176,7 +176,7 @@ Or pass it as an `env` entry in the client config. Restart the client afterwards
 | `gemini_research` | Live web research with Google Search. The answer ends with source URLs. |
 | `gemini_models` | Lists the models your account can use, for example Gemini 4 Argon and Gemini 3.8 Flash. |
 
-Every request runs `agy --print` in **plan mode with the sandbox on**, so Gemini can read and search but cannot change your files or run commands.
+Every request runs `agy --print` in **plan mode with the sandbox on**, so Gemini can read and search but cannot change your files or run commands. MCP tools from your own agy config are denied for these runs: they could act outside your computer, and headless agy can't ask you about them.
 
 ### Media through the Gemini API
 

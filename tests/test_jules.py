@@ -89,9 +89,9 @@ async def test_gemini_code_runs_in_the_folder(tmp_path, monkeypatch):
 
     async def fake_run(args, cwd, timeout):
         seen["args"], seen["cwd"] = args, cwd
-        return '{"status": "SUCCESS", "response": "changed calc.py"}'
+        return '{"status": "SUCCESS", "response": "changed calc.py"}', ""
 
-    monkeypatch.setattr(agy, "run_agy", fake_run)
+    monkeypatch.setattr(agy, "run_agy_capture", fake_run)
     mcp = MCPServer("test")
     agy.register(mcp, dataclasses.replace(Settings.from_env(), agy_path="agy"))
     out = text_of(await mcp.call_tool("gemini_code", {"task": "fix", "folder": str(tmp_path)}))

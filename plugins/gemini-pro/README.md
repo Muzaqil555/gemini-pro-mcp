@@ -45,7 +45,7 @@ The server then runs or connects to these, only when you call the matching tool:
 
 | Tool group | What it runs or connects to |
 |---|---|
-| `gemini_*` | The Antigravity CLI (`agy`) on your computer, in a sandbox. Only `gemini_code` can edit files, in the folder you name. |
+| `gemini_*` | The Antigravity CLI (`agy`) on your computer, in a sandbox, with the MCP tools in your agy config denied. Only `gemini_code` can edit files, in the folder you name. |
 | `jules_*` | The Jules API at `jules.googleapis.com`, with your Jules API key. |
 | `video_generate`, `video_edit`, `video_check`, `image_generate` | The Gemini API, with your Gemini API key. These cost money and ask first. |
 | `video_stitch` | ffmpeg on your computer. It is free and needs `ffmpeg` on your PATH. |

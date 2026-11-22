@@ -28,6 +28,9 @@ def test_build_args_is_read_only_and_sandboxed():
     assert args[args.index("--model") + 1] == "m"
     assert args[args.index("--conversation") + 1] == "c1"
     assert args[args.index("--effort") + 1] == "high"
+    # Print mode can't ask before an MCP tool runs: it ends the turn with no answer.
+    session = json.loads(args[args.index("--settings") + 1])
+    assert session["permissions"]["deny"] == ["mcp(*)"]
 
 
 def test_parse_output_success():
@@ -79,9 +82,9 @@ async def test_ask_passes_files_and_model(settings, tmp_path, monkeypatch):
 
     async def fake_run(args, cwd, timeout):
         seen["args"], seen["cwd"] = args, cwd
-        return json.dumps({"status": "SUCCESS", "response": "ok", "conversation_id": "z"})
+        return json.dumps({"status": "SUCCESS", "response": "ok", "conversation_id": "z"}), ""
 
-    monkeypatch.setattr(agy, "run_agy", fake_run)
+    monkeypatch.setattr(agy, "run_agy_capture", fake_run)
     result = await agy.ask(settings, "summarize", model="gemini-q", paths=[str(f)])
     assert result.response == "ok"
     prompt = seen["args"][seen["args"].index("--print") + 1]
@@ -174,3 +177,14 @@ def test_format_result_says_when_gemini_returned_no_text():
     text = agy.format_result(result)
     assert "Gemini returned no text (finished_reason: interrupted)" in text
     assert "conversation_id: c1" in text
+
+
+async def test_ask_explains_an_empty_answer_with_what_agy_said(settings, monkeypatch):
+    async def fake_run(args, cwd, timeout):
+        out = json.dumps({"status": "SUCCESS", "response": "", "conversation_id": "e1"})
+        return out, "jetski: no output produced - a tool required a permission"
+
+    monkeypatch.setattr(agy, "run_agy_capture", fake_run)
+    text = agy.format_result(await agy.ask(settings, "hi"))
+    assert text.startswith("Gemini returned no text.")
+    assert "agy said: jetski: no output produced" in text

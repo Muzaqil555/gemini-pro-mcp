@@ -30,6 +30,14 @@ MAX_PROMPT_CHARS = 24_000
 # run_agy gives agy this long to exit, then stops it.
 EXIT_GRACE_SECONDS = 10.0
 
+# Settings for these agy runs only. agy asks before it runs an MCP tool, and in print
+# mode it can't ask: it denies the tool and ends the turn with no answer. Gemini reaches
+# for MCP tools from the user's agy config often, for example a search server during
+# web research. Those servers can also act outside the machine, such as sending mail or
+# spending credits. These runs deny every MCP tool, so Gemini sticks to agy's built-in
+# tools and the read-only tools stay read-only.
+SESSION_SETTINGS = json.dumps({"permissions": {"deny": ["mcp(*)"]}})
+
 Effort = Literal["low", "medium", "high", "xhigh", "max"]
 
 INSTALL_HINT = (
@@ -39,6 +47,7 @@ INSTALL_HINT = (
 )
 
 RESEARCH_PROMPT = """Research the question below using web search.
+- Use your built-in web search and page-reading tools.
 - Prefer primary and official sources; cross-check key facts in more than one source.
 - Say plainly when sources disagree or when something could not be verified.
 - End with a "Sources" list of the URLs you used.
@@ -58,6 +67,7 @@ class AgyResult:
     duration_seconds: float | None = None
     usage: dict = field(default_factory=dict)
     finished_reason: str = ""
+    notice: str = ""  # what agy wrote to stderr, kept when the answer is empty
 
 
 def build_args(
@@ -83,6 +93,8 @@ def build_args(
         "--sandbox",
         "--print-timeout",
         f"{timeout}s",
+        "--settings",
+        SESSION_SETTINGS,
     ]
     if model:
         args += ["--model", model]
@@ -188,7 +200,13 @@ async def stop_process_tree(process: asyncio.subprocess.Process) -> None:
 
 
 async def run_agy(args: list[str], cwd: Path, timeout: int) -> str:
-    """Runs agy and returns what it printed.
+    """Runs agy and returns what it printed to stdout (see run_agy_capture)."""
+    out, _err = await run_agy_capture(args, cwd, timeout)
+    return out
+
+
+async def run_agy_capture(args: list[str], cwd: Path, timeout: int) -> tuple[str, str]:
+    """Runs agy and returns what it printed to stdout and to stderr.
 
     Returns as soon as agy has printed a complete JSON result, after giving it
     EXIT_GRACE_SECONDS to exit by itself, rather than waiting for a slow shutdown.
@@ -230,10 +248,10 @@ async def run_agy(args: list[str], cwd: Path, timeout: int) -> str:
         stderr_task.cancel()
         err_bytes = b""
     text = out.decode("utf-8", errors="replace")
+    err = err_bytes.decode("utf-8", errors="replace").strip()
     if process.returncode != 0 and not text.strip():
-        err = err_bytes.decode("utf-8", errors="replace").strip()
         raise AgyError(f"agy exited with code {process.returncode}: {err[:800]}")
-    return text
+    return text, err
 
 
 async def ask(
@@ -271,7 +289,11 @@ async def ask(
         mode=mode,
         agent=agent,
     )
-    return parse_output(await run_agy(args, cwd, settings.agy_timeout))
+    out, err = await run_agy_capture(args, cwd, settings.agy_timeout)
+    result = parse_output(out)
+    if not result.response and err:
+        result.notice = err[-500:]
+    return result
 
 
 def format_result(result: AgyResult) -> str:
@@ -288,6 +310,8 @@ def format_result(result: AgyResult) -> str:
             "below, or rephrase the request. After gemini_code, check the folder with "
             "`git diff`: Gemini may have changed files anyway."
         )
+        if result.notice:
+            body += f"\nagy said: {result.notice}"
     return body + ("\n\n---\n" + " · ".join(footer) if footer else "")
 
 
@@ -363,8 +387,8 @@ def register(mcp: MCPServer, settings: Settings) -> None:
 
         Runs through the Antigravity CLI on the user's Google AI Pro plan: no API
         cost, uses the plan's limits. Read-only. Gemini prefers official sources,
-        cross-checks key facts and says when sources disagree. Usually takes about
-        a minute. For questions about local files use gemini_ask instead.
+        cross-checks key facts and says when sources disagree. Usually takes one
+        to three minutes. For questions about local files use gemini_ask instead.
 
         Args:
             question: What to find out, with context that narrows it, e.g.
