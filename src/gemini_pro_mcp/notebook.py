@@ -10,14 +10,13 @@ from __future__ import annotations
 
 import re
 import time
-from pathlib import Path
 from typing import Literal
 
 from mcp.server.mcpserver import MCPServer
 from mcp_types import ToolAnnotations
 
 from .config import Settings
-from .google_web import Tab, failure
+from .google_web import Tab, failure, local_files
 
 HOST = "notebook.google.com"
 HOME = "https://notebook.google.com/"
@@ -82,15 +81,6 @@ async def click_text(page, text: str, timeout: int = 10_000) -> None:
     )
     await target.first.click(timeout=timeout)
     await page.wait_for_timeout(1200)
-
-
-def local_files(files: list[str] | None) -> list[str]:
-    """Resolves the files to upload, failing before any browser work if one is missing."""
-    paths = [str(Path(f).expanduser().resolve()) for f in files or []]
-    missing = [p for p in paths if not Path(p).is_file()]
-    if missing:
-        raise ValueError(f"Files not found: {missing}")
-    return paths
 
 
 async def add_sources(page, paths: list[str], urls: list[str], text: str | None) -> list[str]:
