@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses
 import json
 import os
@@ -155,6 +156,23 @@ def _running(pid: int) -> bool:
             return False
         time.sleep(0.1)
     return True
+
+
+async def test_run_agy_stops_agy_when_the_call_is_cancelled(tmp_path):
+    """A cancelled tool call must not leave agy running (and editing files) for minutes."""
+    pid_file = tmp_path / "agy.pid"
+    script = (
+        f"import os, time; open({str(pid_file)!r}, 'w').write(str(os.getpid())); time.sleep(120)"
+    )
+    task = asyncio.ensure_future(agy.run_agy([sys.executable, "-c", script], Path(tmp_path), 300))
+    for _ in range(100):
+        if pid_file.exists() and pid_file.read_text():
+            break
+        await asyncio.sleep(0.05)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    assert not _running(int(pid_file.read_text()))
 
 
 async def test_run_agy_still_waits_for_plain_text_output(tmp_path):
