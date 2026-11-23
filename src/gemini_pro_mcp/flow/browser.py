@@ -162,7 +162,8 @@ async def connect(settings: Settings):
             "The Flow tools need Playwright: install with `pip install gemini-pro-mcp[flow]` "
             "(or `uvx --with playwright gemini-pro-mcp`)."
         ) from e
-    launch_chrome(settings)
+    # launch_chrome blocks for up to 10 s while Chrome starts.
+    await asyncio.to_thread(launch_chrome, settings)
     playwright = await async_playwright().start()
     try:
         browser = await playwright.chromium.connect_over_cdp(

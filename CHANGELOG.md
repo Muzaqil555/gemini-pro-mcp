@@ -12,6 +12,7 @@
 - Browser tools put `hl=en` in the query string of a link with a `#` fragment, such as a Colab `#scrollTo=` link. It used to land inside the fragment, so the page did not switch to English. A parameter that merely ends in `hl=` (`shl=1`) no longer stops it either.
 - `file_name` in `video_generate`, `video_edit` and `image_generate` keeps dots that are not a media extension: `demo-v1.2` was saved as `demo-v1.mp4`, and now as `demo-v1.2.mp4`.
 - Videos that the Gemini API returns as a file link (1080p and 4k) are found again before download. The file name was read from the link together with its `:download` suffix, so the readiness check asked for a file that does not exist.
+- The browser tools start Chrome in a worker thread. While Chrome was starting (up to 10 seconds), the server used to stop answering every other tool call.
 
 ## 0.1.6
 
