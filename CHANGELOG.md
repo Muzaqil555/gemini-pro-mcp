@@ -8,6 +8,7 @@
 - When the MCP client cancels a `gemini_*` tool call, agy and the processes it started are stopped. They used to keep running for up to the 10-minute timeout, so `gemini_code` could go on editing files after the user cancelled.
 - A `GEMINI_PRO_CHROME` that is not a program is reported as such. `doctor` used to show it as `[ok]` Chrome, and the browser tools then failed with a `FileNotFoundError` and a request to report a changed page. It may also be a program name on PATH, such as `chromium`.
 - `setup` keeps the comments above a Codex `config.toml` table that comes after this server's tables. Running setup again used to delete them along with the server's old settings.
+- `gemini-pro-mcp doctor --flow` reports a Flow error that has no message (such as a bare `TimeoutError`) by its type. It used to crash with `IndexError: list index out of range`.
 
 ## 0.1.6
 

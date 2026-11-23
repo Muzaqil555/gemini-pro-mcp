@@ -119,7 +119,9 @@ async def flow_live_check(settings: Settings) -> Check:
             credits = await flow.credits()
             return Check("Flow sign-in", True, f"project {project}, {credits or '?'} credits")
     except Exception as e:  # browser automation fails in many ways
-        return Check("Flow sign-in", False, f"{type(e).__name__}: {str(e).splitlines()[0][:200]}")
+        lines = str(e).strip().splitlines()
+        detail = f"{type(e).__name__}: {lines[0][:200]}" if lines else type(e).__name__
+        return Check("Flow sign-in", False, detail)
 
 
 def run_checks(settings: Settings, *, live_flow: bool = False) -> list[Check]:

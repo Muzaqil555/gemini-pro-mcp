@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses
 import json
 
@@ -149,3 +150,21 @@ def test_key_check(monkeypatch):
     monkeypatch.setenv("JULES_API_KEY", "secret")
     found = install.key_check("Jules", ("JULES_API_KEY",), "jules tools", "https://x")
     assert found.ok is True and "secret" not in found.detail
+
+
+def test_flow_live_check_reports_an_error_without_a_message(monkeypatch):
+    from gemini_pro_mcp.flow import tools
+
+    class Hanging:
+        def __init__(self, settings):
+            pass
+
+        async def __aenter__(self):
+            raise TimeoutError()
+
+        async def __aexit__(self, *exc):
+            return False
+
+    monkeypatch.setattr(tools, "Flow", Hanging)
+    check = asyncio.run(install.flow_live_check(Settings.from_env()))
+    assert (check.ok, check.detail) == (False, "TimeoutError")
