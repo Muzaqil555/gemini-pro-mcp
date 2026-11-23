@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- `gemini-pro-mcp setup` now also detects and configures Cursor (`~/.cursor/mcp.json`), Claude Desktop (`claude_desktop_config.json`) and Windsurf (`~/.codeium/windsurf/mcp_config.json`).
+- Added `gemini-pro-mcp auth` to save optional `JULES_API_KEY` and `GEMINI_API_KEY` entries to `~/.config/gemini-pro-mcp/.env` interactively with hidden input while keeping existing comments and keys (core Gemini, Deep Research, Flow and Notebook tools run on your Google AI Pro plan and need no API key).
+- Registered six built-in MCP prompts (`gemini_review`, `gemini_research`, `second_opinion`, `jules_task`, `notebook_workflow`, `make_video`) so every MCP client gets ready-made workflows, and added `/gemini-pro:video` and `/gemini-pro:second-opinion` to the Claude Code plugin.
 - Video stitching, media saves and Notebook downloads keep separate filenames when clients request the same output concurrently. A failed video download or disk write reports the interaction ID for retry.
 - Browser calls share Chrome startup. Flow advances its release notes when they block a project, and shot planning ignores numeric arrays before the scene descriptions.
 - Setup supports pip-only environments, retains backups on repeated identical runs and reports partial registration failures. Jules follows continuation tokens for long sessions and repository lists.

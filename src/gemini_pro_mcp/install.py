@@ -1,15 +1,18 @@
-"""`gemini-pro-mcp doctor` and `gemini-pro-mcp setup`.
+"""`gemini-pro-mcp doctor`, `setup`, and `auth`.
 
 `doctor` checks what works on this computer (Antigravity sign-in, API keys,
 Chrome and the Flow profile) and says how to fix what does not. `setup` adds
 the server to every MCP client it finds: Claude Code, Codex, the Antigravity
-CLI and the Gemini CLI. Clients that have an `mcp add` command get it run;
-the others get their config file edited, keeping everything else in it.
+CLI, the Gemini CLI, Cursor, Claude Desktop and Windsurf. Clients that have an
+`mcp add` command get it run; the others get their config file edited, keeping
+everything else in it. `auth` saves API keys to `~/.config/gemini-pro-mcp/.env`
+without echoing them.
 """
 
 from __future__ import annotations
 
 import asyncio
+import getpass
 import importlib.util
 import json
 import os
@@ -21,10 +24,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import __version__
-from .config import Settings, env_file
+from .config import Settings, env_file, set_env_values
 
 DEFAULT_NAME = "gemini-pro"
-CLIENTS = ("claude", "codex", "agy", "gemini")
+CLIENTS = ("claude", "codex", "agy", "gemini", "cursor", "claude-desktop", "windsurf")
 
 # Flow and Deep Research calls take minutes; clients' default tool timeouts are shorter.
 TOOL_TIMEOUT_SECONDS = 900
@@ -282,9 +285,16 @@ def strip_json_comments(text: str) -> str:
     return JSON_STRING_OR_COMMENT.sub(lambda m: m.group(1) or " ", text)
 
 
-def gemini_settings(text: str, name: str, command: str, args: list[str], env: dict[str, str]):
-    """The Gemini CLI's settings.json with this server added and everything else kept
-    (except comments, which JSON cannot hold; setup keeps the old file as .bak)."""
+def mcp_json_config(
+    text: str,
+    name: str,
+    command: str,
+    args: list[str],
+    env: dict[str, str],
+    *,
+    timeout_ms: int | None = None,
+) -> str:
+    """An MCP JSON config file with this server added under mcpServers, keeping everything else."""
     text = strip_json_comments(text)
     data = json.loads(text) if text.strip() else {}
     if not isinstance(data, dict):
@@ -293,11 +303,33 @@ def gemini_settings(text: str, name: str, command: str, args: list[str], env: di
         data["mcpServers"] = {}
     if not isinstance(data["mcpServers"], dict):
         raise ValueError('"mcpServers" is not a JSON object')
-    server: dict = {"command": command, "args": args, "timeout": TOOL_TIMEOUT_SECONDS * 1000}
+    server: dict = {"command": command, "args": args}
+    if timeout_ms is not None:
+        server["timeout"] = timeout_ms
     if env:
         server["env"] = env
     data["mcpServers"][name] = server
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
+
+
+def gemini_settings(text: str, name: str, command: str, args: list[str], env: dict[str, str]):
+    """The Gemini CLI's settings.json with this server added and everything else kept
+    (except comments, which JSON cannot hold; setup keeps the old file as .bak)."""
+    return mcp_json_config(text, name, command, args, env, timeout_ms=TOOL_TIMEOUT_SECONDS * 1000)
+
+
+def claude_desktop_config_path(home: Path, platform: str | None = None) -> Path:
+    """Where Claude Desktop keeps claude_desktop_config.json on this OS."""
+    plat = platform or sys.platform
+    if plat == "win32":
+        appdata = os.environ.get("APPDATA")
+        base = Path(appdata) if appdata and home == Path.home() else home / "AppData" / "Roaming"
+        return base / "Claude" / "claude_desktop_config.json"
+    if plat == "darwin":
+        return home / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
+    xdg = os.environ.get("XDG_CONFIG_HOME")
+    base = Path(xdg) if xdg and home == Path.home() else home / ".config"
+    return base / "Claude" / "claude_desktop_config.json"
 
 
 def run_commands(commands: list[list[str]], dry_run: bool) -> tuple[bool, str]:
@@ -340,6 +372,24 @@ def write_file(path: Path, text: str, dry_run: bool) -> tuple[bool, str]:
     return True, f"updated {path}"
 
 
+def _install_json_client(
+    path: Path,
+    *,
+    name: str,
+    command: str,
+    args: list[str],
+    env: dict[str, str],
+    dry_run: bool,
+    timeout_ms: int | None = None,
+) -> tuple[bool, str]:
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    try:
+        new = mcp_json_config(text, name, command, args, env, timeout_ms=timeout_ms)
+    except ValueError as e:  # includes json.JSONDecodeError
+        return False, f"{path} is not valid settings ({e}); fix it and run setup again"
+    return write_file(path, new, dry_run)
+
+
 def install_client(
     client: str,
     *,
@@ -373,12 +423,36 @@ def install_client(
         path = home / ".gemini" / "settings.json"
         if not (shutil.which("gemini") or path.exists()):
             return None, "Gemini CLI not found"
-        text = path.read_text(encoding="utf-8") if path.exists() else ""
-        try:
-            new = gemini_settings(text, name, command, args, env)
-        except ValueError as e:  # includes json.JSONDecodeError
-            return False, f"{path} is not valid settings ({e}); fix it and run setup again"
-        return write_file(path, new, dry_run)
+        return _install_json_client(
+            path,
+            name=name,
+            command=command,
+            args=args,
+            env=env,
+            dry_run=dry_run,
+            timeout_ms=TOOL_TIMEOUT_SECONDS * 1000,
+        )
+    if client == "cursor":
+        path = home / ".cursor" / "mcp.json"
+        if not (shutil.which("cursor") or path.parent.is_dir()):
+            return None, "Cursor not found"
+        return _install_json_client(
+            path, name=name, command=command, args=args, env=env, dry_run=dry_run
+        )
+    if client == "claude-desktop":
+        path = claude_desktop_config_path(home)
+        if not path.parent.is_dir():
+            return None, "Claude Desktop not found"
+        return _install_json_client(
+            path, name=name, command=command, args=args, env=env, dry_run=dry_run
+        )
+    if client == "windsurf":
+        path = home / ".codeium" / "windsurf" / "mcp_config.json"
+        if not (shutil.which("windsurf") or path.parent.is_dir()):
+            return None, "Windsurf not found"
+        return _install_json_client(
+            path, name=name, command=command, args=args, env=env, dry_run=dry_run
+        )
     raise ValueError(client)
 
 
@@ -387,6 +461,9 @@ LABELS = {
     "codex": "Codex",
     "agy": "Antigravity CLI",
     "gemini": "Gemini CLI",
+    "cursor": "Cursor",
+    "claude-desktop": "Claude Desktop",
+    "windsurf": "Windsurf",
 }
 
 
@@ -444,3 +521,48 @@ def setup(
         login = subprocess.list2cmdline([command, *args, "flow-login"])
         print(f"Next: run {login} and sign in to Google in the window.")
     return int(failed)
+
+
+AUTH_KEYS = (
+    (
+        "JULES_API_KEY",
+        "Optional: Jules API key (jules_* GitHub coding agent — uses your plan's Jules limits)",
+        "https://jules.google.com/settings",
+    ),
+    (
+        "GEMINI_API_KEY",
+        "Optional: Gemini API key (paid per use — video_generate, video_edit, image_generate)",
+        "https://aistudio.google.com/apikey",
+    ),
+)
+
+
+def auth(path: Path | None = None, *, prompt_secret=getpass.getpass) -> int:
+    """Interactively saves optional API keys to the .env file without echoing them."""
+    target = path or env_file()
+    print(f"gemini-pro-mcp {__version__} auth\n")
+    print(
+        "Gemini, Deep Research, Flow and Notebooks run on your Google AI Pro subscription\n"
+        "and need NO API key (sign in with `agy` / `flow-login` instead).\n"
+        f"Optional keys below are saved to {target} (input is hidden; press Enter to skip).\n"
+    )
+    updates: dict[str, str] = {}
+    for var, label, url in AUTH_KEYS:
+        status = "already set" if os.environ.get(var) else "not set"
+        print(f"  {label}")
+        print(f"  Get one at: {url}  [{status}]")
+        try:
+            value = prompt_secret(f"  {var}: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nCancelled.")
+            return 1
+        if value:
+            updates[var] = value
+        print()
+    if not updates:
+        print("No changes made.")
+        return 0
+    saved = set_env_values(updates, target)
+    print(f"Saved {', '.join(updates)} to {saved}.")
+    print("Run `gemini-pro-mcp doctor` to verify.")
+    return 0

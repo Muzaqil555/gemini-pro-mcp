@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from gemini_pro_mcp.config import load_env_file, parse_env_line
+from gemini_pro_mcp.config import load_env_file, parse_env_line, set_env_values
 
 
 @pytest.mark.parametrize(
@@ -40,3 +40,21 @@ def test_load_env_file_handles_bom_and_keeps_existing_values(tmp_path, monkeypat
 
     assert os.environ["GPM_TEST_KEY"] == "from-file"
     assert os.environ["GPM_TEST_SET"] == "from-env"
+
+
+def test_set_env_values_preserves_comments_and_other_keys(tmp_path):
+    env = tmp_path / "nested" / ".env"
+    env.parent.mkdir(parents=True)
+    env.write_text("# My keys\nOTHER=keep\nGEMINI_API_KEY=old\n", encoding="utf-8")
+
+    saved = set_env_values({"GEMINI_API_KEY": "new-key", "JULES_API_KEY": "a # b"}, env)
+
+    assert saved == env
+    lines = env.read_text(encoding="utf-8").splitlines()
+    assert lines == [
+        "# My keys",
+        "OTHER=keep",
+        "GEMINI_API_KEY=new-key",
+        'JULES_API_KEY="a # b"',
+    ]
+    assert parse_env_line(lines[3]) == ("JULES_API_KEY", "a # b")

@@ -26,8 +26,10 @@ With the [browser tools](#browser-tools) set up, Claude can also do these:
 |---|---|
 | `/gemini-pro:gemini-review [focus]` | Gemini reviews your current changes. Claude then checks each point against the code. |
 | `/gemini-pro:gemini-research <question>` | Research on the live web with Gemini and Google Search. The answer lists its sources. |
+| `/gemini-pro:second-opinion <question> [files]` | Compares Claude's view with Gemini's independent second opinion on a design, architecture or bug. |
 | `/gemini-pro:jules <task>` | Hands a task on your GitHub repository to Jules. You confirm it first, and Jules waits for you to approve its plan. |
 | `/gemini-pro:notebook <files or links> [question or output]` | Builds a Gemini Notebook, then answers a question or makes an Audio Overview, slides, a mind map and more. It needs the [browser tools](#browser-tools). |
+| `/gemini-pro:video <idea> [duration]` | Creates a video with Google Flow credits (any length) or the Gemini API, and joins clips locally. |
 
 The plugin also has a skill that tells Claude which tool fits which request. It also marks which tools cost money and which change files.
 
@@ -39,7 +41,7 @@ The plugin also has a skill that tells Claude which tool fits which request. It 
 
 ## What the plugin runs
 
-The plugin starts the server with `uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp@<commit> gemini-pro-mcp`, where `<commit>` is the full commit of the released version. uv fetches that commit from GitHub, installs it with its dependencies from PyPI, and runs it on your computer over stdio. You need git for this. The first start downloads and installs everything, which takes a minute or two. After that, the server starts in a few seconds. Besides the server, the plugin holds one skill and four commands, all plain Markdown instructions for Claude. It has no hooks and no agents, and none of its files run code.
+The plugin starts the server with `uvx --from git+https://github.com/Muzaqil555/gemini-pro-mcp@<commit> gemini-pro-mcp`, where `<commit>` is the full commit of the released version. uv fetches that commit from GitHub, installs it with its dependencies from PyPI, and runs it on your computer over stdio. You need git for this. The first start downloads and installs everything, which takes a minute or two. After that, the server starts in a few seconds. Besides the server, the plugin holds one skill and six commands, all plain Markdown instructions for Claude. It has no hooks and no agents, and none of its files run code.
 
 The server then runs or connects to these, only when you call the matching tool:
 

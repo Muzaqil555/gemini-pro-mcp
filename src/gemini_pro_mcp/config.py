@@ -58,6 +58,35 @@ def load_env_file(path: Path | None = None) -> None:
             os.environ.setdefault(*parsed)
 
 
+def _format_env_value(value: str) -> str:
+    if any(ch.isspace() or ch in ("#", "'", '"') for ch in value):
+        escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+        return f'"{escaped}"'
+    return value
+
+
+def set_env_values(updates: dict[str, str], path: Path | None = None) -> Path:
+    """Writes or updates KEY=VALUE entries in the .env file, keeping comments and other keys."""
+    path = path or env_file()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = path.read_text(encoding="utf-8-sig").splitlines() if path.is_file() else []
+    remaining = {k: v for k, v in updates.items() if v}
+    out: list[str] = []
+    for line in lines:
+        parsed = parse_env_line(line)
+        if parsed and parsed[0] in remaining:
+            key = parsed[0]
+            out.append(f"{key}={_format_env_value(remaining.pop(key))}")
+        else:
+            out.append(line)
+    for key, value in remaining.items():
+        out.append(f"{key}={_format_env_value(value)}")
+    path.write_text("\n".join(out) + ("\n" if out else ""), encoding="utf-8")
+    if os.name != "nt":
+        os.chmod(path, 0o600)
+    return path
+
+
 def _int(name: str, default: int) -> int:
     """A whole-number setting; a value that isn't one falls back to the default.
 

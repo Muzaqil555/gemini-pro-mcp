@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 from mcp.server.mcpserver import MCPServer
 
-from . import __version__, agy, benefits, install, jules, media, stitch
+from . import __version__, agy, benefits, install, jules, media, prompts, stitch
 from .config import Settings, load_env_file
 
 INSTRUCTIONS = """\
@@ -62,6 +63,7 @@ def build_server(settings: Settings | None = None) -> MCPServer:
     media.register(server, settings)
     stitch.register(server, settings)
     jules.register(server, settings)
+    prompts.register(server)
     if settings.flow_enabled:
         from . import google_web, notebook
         from .flow import tools as flow_tools
@@ -90,8 +92,21 @@ def main(argv: list[str] | None = None) -> None:
     doctor.add_argument(
         "--flow", action="store_true", help="also open Flow and check the sign-in and credits"
     )
+    auth_cmd = sub.add_parser(
+        "auth",
+        help=(
+            "save optional API keys (Jules, paid media API) to .env; core AI Pro tools need no key"
+        ),
+    )
+    auth_cmd.add_argument(
+        "--path", type=Path, default=None, help="custom .env path (default: GEMINI_PRO_ENV_FILE)"
+    )
     setup = sub.add_parser(
-        "setup", help="add the server to Claude Code, Codex, Antigravity and Gemini CLI"
+        "setup",
+        help=(
+            "add the server to Claude Code, Codex, Antigravity, Gemini CLI, "
+            "Cursor, Claude Desktop and Windsurf"
+        ),
     )
     setup.add_argument(
         "--client",
@@ -120,6 +135,8 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(login(Settings.from_env()))
     if args.command == "doctor":
         sys.exit(install.doctor(Settings.from_env(), live_flow=args.flow))
+    if args.command == "auth":
+        sys.exit(install.auth(args.path))
     if args.command == "setup":
         sys.exit(
             install.setup(

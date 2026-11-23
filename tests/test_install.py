@@ -237,3 +237,88 @@ def test_run_commands_reports_a_hanging_client(monkeypatch):
     ok, detail = install.run_commands([["claude", "mcp", "add", "x"]], dry_run=False)
     assert ok is False
     assert "timed out" in detail and "add it by hand: claude mcp add x" in detail
+
+
+def test_setup_writes_cursor_claude_desktop_and_windsurf(monkeypatch, tmp_path):
+    monkeypatch.setattr(install.shutil, "which", lambda name: None)
+    monkeypatch.setattr(install, "run_checks", lambda settings, live_flow=False: [])
+    monkeypatch.setattr(install, "source_root", lambda: None)
+    monkeypatch.delenv("CODEX_HOME", raising=False)
+
+    cursor_dir = tmp_path / ".cursor"
+    cursor_dir.mkdir()
+    (cursor_dir / "mcp.json").write_text('{"mcpServers": {"existing": {"command": "x"}}}')
+
+    claude_cfg = install.claude_desktop_config_path(tmp_path)
+    claude_cfg.parent.mkdir(parents=True)
+    claude_cfg.write_text('{"mcpServers": {}}')
+
+    windsurf_dir = tmp_path / ".codeium" / "windsurf"
+    windsurf_dir.mkdir(parents=True)
+
+    settings = dataclasses.replace(Settings.from_env(), agy_path=None)
+    code = install.setup(
+        settings,
+        clients=["cursor", "claude-desktop", "windsurf"],
+        name="gemini-pro",
+        browser=True,
+        auto_approve=False,
+        dry_run=False,
+        home=tmp_path,
+    )
+    assert code == 0
+
+    cursor_data = json.loads((cursor_dir / "mcp.json").read_text())
+    assert "existing" in cursor_data["mcpServers"]
+    assert "gemini-pro" in cursor_data["mcpServers"]
+    assert "timeout" not in cursor_data["mcpServers"]["gemini-pro"]
+    assert cursor_data["mcpServers"]["gemini-pro"]["env"] == {"GEMINI_PRO_ENABLE_BROWSER": "1"}
+
+    claude_data = json.loads(claude_cfg.read_text())
+    assert "gemini-pro" in claude_data["mcpServers"]
+
+    windsurf_data = json.loads((windsurf_dir / "mcp_config.json").read_text())
+    assert "gemini-pro" in windsurf_data["mcpServers"]
+
+
+def test_claude_desktop_config_path_per_os(tmp_path):
+    assert (
+        install.claude_desktop_config_path(tmp_path, platform="darwin")
+        == tmp_path / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"
+    )
+    assert (
+        install.claude_desktop_config_path(tmp_path, platform="win32")
+        == tmp_path / "AppData" / "Roaming" / "Claude" / "claude_desktop_config.json"
+    )
+    assert (
+        install.claude_desktop_config_path(tmp_path, platform="linux")
+        == tmp_path / ".config" / "Claude" / "claude_desktop_config.json"
+    )
+
+
+def test_auth_saves_keys_and_never_echoes_secrets(tmp_path, monkeypatch, capsys):
+    env = tmp_path / ".env"
+    env.write_text("# header\nEXISTING=1\n", encoding="utf-8")
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("JULES_API_KEY", raising=False)
+    answers = iter(["", "secret-gemini-123"])
+
+    code = install.auth(env, prompt_secret=lambda _prompt: next(answers))
+
+    assert code == 0
+    out = capsys.readouterr().out
+    assert "need NO API key" in out
+    assert "secret-gemini-123" not in out
+    assert "Saved GEMINI_API_KEY" in out
+    content = env.read_text(encoding="utf-8")
+    assert "# header" in content and "EXISTING=1" in content
+    assert "GEMINI_API_KEY=secret-gemini-123" in content
+    assert "JULES_API_KEY" not in content
+
+
+def test_auth_handles_keyboard_interrupt(tmp_path):
+    def cancel(_prompt):
+        raise KeyboardInterrupt()
+
+    assert install.auth(tmp_path / ".env", prompt_secret=cancel) == 1
+    assert not (tmp_path / ".env").exists()

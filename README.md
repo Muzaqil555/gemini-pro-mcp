@@ -88,11 +88,12 @@ One MCP server, five ways into Google's AI:
 uvx gemini-pro-mcp setup
 ```
 
-`setup` finds Claude Code, Codex, the Antigravity CLI and the Gemini CLI on your computer, adds the server to each one, and then checks what works: the Antigravity sign-in, your API keys, Chrome and the Flow profile. Each item it reports as missing comes with the fix. Restart the clients afterwards.
+`setup` finds Claude Code, Codex, the Antigravity CLI, the Gemini CLI, Cursor, Claude Desktop and Windsurf on your computer, adds the server to each one, and then checks what works: the Antigravity sign-in, your API keys, Chrome and the Flow profile. Each item it reports as missing comes with the fix. Restart the clients afterwards.
 
 - `--browser` also enables the Flow, Gemini app, AI Mode and Notebook tools. Run `uvx gemini-pro-mcp flow-login` once afterwards and sign in to Google in the window that opens.
 - `--auto-approve` pre-approves spending, so paid tools run without asking first.
-- `--client codex` (repeatable) sets up only the clients you name. `--dry-run` shows the changes without making them.
+- `--client codex` (repeatable: `claude`, `codex`, `agy`, `gemini`, `cursor`, `claude-desktop`, `windsurf`) sets up only the clients you name. `--dry-run` shows the changes without making them.
+- Optional: `uvx gemini-pro-mcp auth` interactively saves `JULES_API_KEY` (Jules) or `GEMINI_API_KEY` (paid API media) to `~/.config/gemini-pro-mcp/.env` with hidden input. Core Gemini, Deep Research, Flow and Notebook tools run on your Google AI Pro plan and need **no API key**.
 
 Edited config files are backed up next to themselves (`config.toml.bak`, `settings.json.bak`). To check things again later, without changing anything:
 
@@ -133,7 +134,7 @@ gemini mcp add gemini-pro uvx gemini-pro-mcp
 
 Settings go in as environment variables, e.g. `agy mcp add --env GEMINI_PRO_ENABLE_BROWSER=1 gemini-pro -- ...`, or in the `.env` file below.
 
-**As a Gemini CLI extension or a Claude Code plugin.** Both add the server without the browser tools; for those, run `setup --browser` as above. Run `uvx gemini-pro-mcp doctor` afterwards to see what works. The Claude Code plugin also adds four commands: `/gemini-pro:gemini-review` (Gemini reviews your diff, then Claude checks each point), `/gemini-pro:gemini-research`, `/gemini-pro:jules` and `/gemini-pro:notebook`. It also adds a skill that picks the right tool for each request.
+**As a Gemini CLI extension or a Claude Code plugin.** Both add the server without the browser tools; for those, run `setup --browser` as above. Run `uvx gemini-pro-mcp doctor` afterwards to see what works. The Claude Code plugin also adds six commands: `/gemini-pro:gemini-review` (Gemini reviews your diff, then Claude checks each point), `/gemini-pro:gemini-research`, `/gemini-pro:second-opinion`, `/gemini-pro:jules`, `/gemini-pro:notebook` and `/gemini-pro:video`. It also adds a skill that picks the right tool for each request. Every MCP client also gets the same six workflows directly as MCP prompts (`gemini_review`, `gemini_research`, `second_opinion`, `jules_task`, `notebook_workflow`, `make_video`).
 
 ```bash
 gemini extensions install https://github.com/Muzaqil555/gemini-pro-mcp
