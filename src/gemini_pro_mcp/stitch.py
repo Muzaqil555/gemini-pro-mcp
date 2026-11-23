@@ -95,7 +95,10 @@ async def stitch(clips: list[Path], output: Path) -> Path:
                     str(output),
                 ]
             )
-        if code != 0:
+        # The concat demuxer stops at a clip it can't read, and ffmpeg still exits
+        # with 0 after writing only the clips before it.
+        if code != 0 or "Impossible to open" in err:
+            output.unlink(missing_ok=True)
             raise StitchError(f"ffmpeg failed: {err.strip()[:600]}")
     return output
 
