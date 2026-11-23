@@ -15,6 +15,7 @@
 - The browser tools start Chrome in a worker thread. While Chrome was starting (up to 10 seconds), the server used to stop answering every other tool call.
 - `flow_make_video` finds the clips of an earlier run again when `file_name` contains `[`, `]`, `*` or `?`. The name was used as a glob pattern, so a resumed job did not see the clips it had already saved and generated them again, spending Flow credits a second time.
 - `notebook_create` and `notebook_add_sources` check that every file in `files` exists before opening Chrome. `notebook_create` used to make a new, empty notebook first and then fail on the missing file, leaving the empty notebook behind.
+- `gemini_app` says which files in `files` don't exist before opening Chrome. A wrong path used to fail inside the browser, after the model and tool pickers had been clicked, with an error asking the user to report a changed page.
 
 ## 0.1.6
 
