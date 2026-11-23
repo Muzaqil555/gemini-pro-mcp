@@ -30,6 +30,7 @@
 - `jules_status(activities=0)` shows only the state and pull request. It used to list every activity, because `[-0:]` is the whole list.
 - `notebook_studio` no longer overwrites an earlier Audio or Video Overview that Notebook downloads under the same file name. The new file gets a `-2`, `-3`... suffix, as `flow_*` and the media tools already do.
 - `notebook_ask` says when `wait_seconds` ran out while the notebook was still writing its answer. It used to return the cut-off text as if it were the whole answer.
+- `flow_act` and `google_act` with `action='replace'` replace the text of a rich text box on macOS too. They pressed Control+A to select it, which on macOS only moves the cursor, so the new text was added to the old one.
 
 ## 0.1.6
 
