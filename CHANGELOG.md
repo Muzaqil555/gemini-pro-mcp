@@ -35,6 +35,7 @@
 - `flow_make_video` keeps Gemini's shot list when the answer has brackets outside the JSON array, such as "[0-8s]" or a closing note like "Each shot is [8 s]". The shot list was read from the first `[` to the last `]`, which failed to parse, and the video quietly fell back to the same prompt with "(part 1 of 3, continuing)" for every clip.
 - `video_stitch` reports an error when one of the clips can't be read (for example a truncated download). ffmpeg stopped at that clip but exited successfully, so the tool said "Saved" for a video that was missing every clip from that one on. A failed join no longer leaves a partial file in the output folder.
 - `video_stitch` joins clips whose path contains an apostrophe, such as `Muzaqil's clips/a.mp4`. ffmpeg's file list didn't escape the quote, so ffmpeg could not open the clip.
+- When the MCP client cancels `video_stitch`, ffmpeg is stopped. It used to keep re-encoding in the background and could leave a half-written video at the output path.
 
 ## 0.1.6
 

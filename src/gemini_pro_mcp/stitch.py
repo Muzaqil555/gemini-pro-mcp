@@ -64,7 +64,12 @@ async def _run(args: list[str]) -> tuple[int, str]:
         stdout=asyncio.subprocess.DEVNULL,
         stderr=asyncio.subprocess.PIPE,
     )
-    _, stderr = await process.communicate()
+    try:
+        _, stderr = await process.communicate()
+    except asyncio.CancelledError:  # the client cancelled the tool call
+        process.kill()
+        await process.wait()
+        raise
     return process.returncode, stderr.decode("utf-8", errors="replace")
 
 
@@ -82,26 +87,30 @@ async def stitch(clips: list[Path], output: Path) -> Path:
         listing = Path(tmp) / "clips.txt"
         listing.write_text(concat_listing(clips), encoding="utf-8")
         base = [exe, "-y", "-hide_banner", "-loglevel", "error", "-f", "concat", "-safe", "0"]
-        code, err = await _run([*base, "-i", str(listing), "-c", "copy", str(output)])
-        if code != 0:
-            code, err = await _run(
-                [
-                    *base,
-                    "-i",
-                    str(listing),
-                    "-c:v",
-                    "libx264",
-                    "-preset",
-                    "veryfast",
-                    "-crf",
-                    "18",
-                    "-c:a",
-                    "aac",
-                    "-movflags",
-                    "+faststart",
-                    str(output),
-                ]
-            )
+        try:
+            code, err = await _run([*base, "-i", str(listing), "-c", "copy", str(output)])
+            if code != 0:
+                code, err = await _run(
+                    [
+                        *base,
+                        "-i",
+                        str(listing),
+                        "-c:v",
+                        "libx264",
+                        "-preset",
+                        "veryfast",
+                        "-crf",
+                        "18",
+                        "-c:a",
+                        "aac",
+                        "-movflags",
+                        "+faststart",
+                        str(output),
+                    ]
+                )
+        except asyncio.CancelledError:
+            output.unlink(missing_ok=True)
+            raise
         # The concat demuxer stops at a clip it can't read, and ffmpeg still exits
         # with 0 after writing only the clips before it.
         if code != 0 or "Impossible to open" in err:
