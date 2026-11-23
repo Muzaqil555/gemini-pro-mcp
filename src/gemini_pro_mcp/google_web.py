@@ -123,6 +123,15 @@ class Tab:
         return path
 
 
+def local_files(files: list[str] | None) -> list[str]:
+    """Resolves the files to upload, failing before any browser work if one is missing."""
+    paths = [str(Path(f).expanduser().resolve()) for f in files or []]
+    missing = [p for p in paths if not Path(p).is_file()]
+    if missing:
+        raise ValueError(f"Files not found: {missing}")
+    return paths
+
+
 def failure(e: Exception) -> str:
     if isinstance(e, FlowError | ValueError):
         return f"Error: {e}"
