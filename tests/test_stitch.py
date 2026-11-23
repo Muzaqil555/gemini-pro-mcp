@@ -2,6 +2,7 @@ import asyncio
 import os
 import subprocess
 import sys
+import time
 
 import pytest
 
@@ -62,6 +63,24 @@ def test_unique_path(tmp_path):
     assert stitch.unique_path(tmp_path, "v", ".mp4").name == "v-2.mp4"
 
 
+def _running(pid: int) -> bool:
+    """Whether a process is still alive, without signalling it."""
+    if sys.platform == "win32":
+        out = subprocess.run(
+            ["tasklist", "/FI", f"PID eq {pid}", "/NH"], capture_output=True, text=True
+        ).stdout
+        return str(pid) in out
+    for _ in range(50):
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        time.sleep(0.1)
+    return True
+
+
 async def test_run_stops_ffmpeg_when_the_call_is_cancelled(tmp_path):
     pid_file = tmp_path / "ffmpeg.pid"
     script = (
@@ -75,5 +94,4 @@ async def test_run_stops_ffmpeg_when_the_call_is_cancelled(tmp_path):
     task.cancel()
     with pytest.raises(asyncio.CancelledError):
         await task
-    with pytest.raises(ProcessLookupError):
-        os.kill(int(pid_file.read_text()), 0)
+    assert not _running(int(pid_file.read_text()))
