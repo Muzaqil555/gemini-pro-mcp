@@ -9,6 +9,7 @@
 - A `GEMINI_PRO_CHROME` that is not a program is reported as such. `doctor` used to show it as `[ok]` Chrome, and the browser tools then failed with a `FileNotFoundError` and a request to report a changed page. It may also be a program name on PATH, such as `chromium`.
 - `setup` keeps the comments above a Codex `config.toml` table that comes after this server's tables. Running setup again used to delete them along with the server's old settings.
 - `gemini-pro-mcp doctor --flow` reports a Flow error that has no message (such as a bare `TimeoutError`) by its type. It used to crash with `IndexError: list index out of range`.
+- Browser tools put `hl=en` in the query string of a link with a `#` fragment, such as a Colab `#scrollTo=` link. It used to land inside the fragment, so the page did not switch to English. A parameter that merely ends in `hl=` (`shl=1`) no longer stops it either.
 
 ## 0.1.6
 
