@@ -206,7 +206,7 @@ def register(mcp: MCPServer, settings: Settings) -> None:
         try:
             sid = session_id(session)
             data = await call("GET", f"sessions/{sid}")
-            acts = await list_activities(sid)
+            acts = await list_activities(sid) if activities > 0 else []
             lines = [
                 f"Session {sid}: {data.get('title', '')}",
                 f"State: {data.get('state', 'unknown')}",
@@ -215,7 +215,7 @@ def register(mcp: MCPServer, settings: Settings) -> None:
                 pr = output.get("pullRequest")
                 if pr:
                     lines.append(f"Pull request: {pr.get('url')} ({pr.get('title', '')})")
-            items = acts[-activities:]
+            items = acts[-activities:] if activities > 0 else []
             if items:
                 lines.append("Recent activity:")
                 lines += [describe_activity(a) for a in items]
