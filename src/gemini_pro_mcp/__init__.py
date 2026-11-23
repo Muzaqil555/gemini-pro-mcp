@@ -7,4 +7,4 @@ import warnings
 # on a new user's first run and are not ours to fix.
 warnings.filterwarnings("ignore", category=SyntaxWarning)
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"

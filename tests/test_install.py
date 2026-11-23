@@ -112,9 +112,9 @@ def test_server_command(monkeypatch, tmp_path):
     monkeypatch.setattr(install.shutil, "which", lambda name: name)
     monkeypatch.setattr(install, "source_root", lambda: None)
     _, args = install.server_command(browser=False)
-    assert args == ["gemini-pro-mcp"]
+    assert args == ["--from", f"gemini-pro-mcp=={install.__version__}", "gemini-pro-mcp"]
     _, args = install.server_command(browser=True)
-    assert args == ["--from", "gemini-pro-mcp[flow]", "gemini-pro-mcp"]
+    assert args == ["--from", f"gemini-pro-mcp[flow]=={install.__version__}", "gemini-pro-mcp"]
     monkeypatch.setattr(install, "source_root", lambda: tmp_path)
     _, args = install.server_command(browser=True)
     assert args == ["--directory", tmp_path.as_posix(), "run", "--extra", "flow", "gemini-pro-mcp"]
@@ -279,6 +279,26 @@ def test_setup_writes_cursor_claude_desktop_and_windsurf(monkeypatch, tmp_path):
 
     windsurf_data = json.loads((windsurf_dir / "mcp_config.json").read_text())
     assert "gemini-pro" in windsurf_data["mcpServers"]
+
+
+def test_antigravity_without_cli_preserves_existing_desktop_servers(tmp_path, monkeypatch):
+    monkeypatch.setattr(install.shutil, "which", lambda name: None)
+    settings = dataclasses.replace(Settings.from_env(), agy_path=None)
+    params = dict(
+        name="gemini-pro",
+        command="uvx",
+        args=["gemini-pro-mcp"],
+        env={},
+        settings=settings,
+        home=tmp_path,
+        dry_run=False,
+    )
+    path = tmp_path / ".gemini" / "config" / "mcp_config.json"
+    path.parent.mkdir(parents=True)
+    assert install.install_client("agy", **params)[0] is None
+    path.write_text('{"mcpServers":{"other":{"command":"other"}}}')
+    assert install.install_client("agy", **params)[0] is True
+    assert set(json.loads(path.read_text())["mcpServers"]) == {"other", "gemini-pro"}
 
 
 def test_claude_desktop_config_path_per_os(tmp_path):

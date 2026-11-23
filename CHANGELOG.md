@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.7
+
+- Added a first-run guide for seven clients and a release check that exercises the Claude plugin launcher over MCP. Antigravity setup can also register the server from an existing desktop configuration when the CLI is missing.
 
 - `gemini-pro-mcp setup` now also detects and configures Cursor (`~/.cursor/mcp.json`), Claude Desktop (`claude_desktop_config.json`) and Windsurf (`~/.codeium/windsurf/mcp_config.json`).
 - Added `gemini-pro-mcp auth` to save optional `JULES_API_KEY` and `GEMINI_API_KEY` entries to `~/.config/gemini-pro-mcp/.env` interactively with hidden input while keeping existing comments and keys (core Gemini, Deep Research, Flow and Notebook tools run on your Google AI Pro plan and need no API key).

@@ -3,7 +3,7 @@
 
 **English** · [Türkçe](docs/README.tr.md) · [Русский](docs/README.ru.md) · [Azərbaycanca](docs/README.az.md)
 
-**Your Google AI Pro subscription, inside Claude, Codex and the Gemini CLI.** Gemini 4 Argon, Deep Research, Flow videos, Gemini Notebooks, Jules and the rest of the plan you already pay for, as up to 36 MCP tools. One command sets it up.
+**Ask Gemini to review your code from Claude Code, Cursor, Antigravity, Gemini CLI, Codex, Claude Desktop or Windsurf.** Use your Google AI Pro subscription for a second opinion, Deep Research, Flow videos and Gemini Notebooks.
 
 [![CI](https://github.com/Muzaqil555/gemini-pro-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Muzaqil555/gemini-pro-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -13,17 +13,28 @@
 [![Glama score](https://glama.ai/mcp/servers/Muzaqil555/gemini-pro-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Muzaqil555/gemini-pro-mcp)
 [![Mentioned in Awesome Gemini CLI](https://awesome.re/mentioned-badge.svg)](https://github.com/Piebald-AI/awesome-gemini-cli)
 [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/muzaqil555/gemini-pro-mcp)
-![Works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Codex%20%C2%B7%20Antigravity%20%C2%B7%20Gemini%20CLI-555)
 
-<p align="center"><b>17 tools by default · 36 with browser tools enabled</b></p>
+### Try it in your coding agent
 
-<p align="center"><img src="https://raw.githubusercontent.com/Muzaqil555/gemini-pro-mcp/main/docs/demo.gif" alt="Demo: one sentence in Claude Code becomes a 2 minute video of a day in Baku, made in Google Flow on the AI Pro plan's credits" width="720"></p>
+Paste this into an agent that can run terminal commands. Replace `cursor` with your client ID from the table.
 
-```bash
-uvx gemini-pro-mcp setup
-```
+> Check that uvx is installed, run `uvx gemini-pro-mcp setup --client cursor`, then tell me how to reload this client and call `google_pro_benefits` to verify the connection.
 
-After restarting your client, ask it to call `google_pro_benefits` and name the tool for reviewing a local file. This first call works offline without an API key. To try a real review, sign in with `agy` and ask Gemini for a second opinion on one file.
+| Client | Client ID | Installation |
+|---|---|---|
+| Claude Code | `claude` | For the skill and six slash commands, use `/plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp` inside Claude Code. |
+| Gemini CLI | `gemini` | For the extension, run `gemini extensions install https://github.com/Muzaqil555/gemini-pro-mcp`. |
+| Antigravity | `agy` | Run setup, then reload the MCP servers in Antigravity. |
+| Cursor | `cursor` | Run setup, then open Cursor Settings → Tools & MCP. |
+| Codex | `codex` | Run setup, then start a new session. |
+| Claude Desktop | `claude-desktop` | Run setup in a terminal, then quit and reopen Claude Desktop. |
+| Windsurf | `windsurf` | Run setup, then refresh the MCP servers. |
+
+Choose one installation method per client. To configure all detected clients, run `uvx gemini-pro-mcp setup`. The first tool call works offline after installation. For a live code review, sign in once with `agy`, then ask: **“Get a second opinion from Gemini on my diff.”** See the [prerequisites](#1-prerequisites) for optional tools and billing.
+
+[![Claude asks Gemini to review a checkout change. A test reproduces the free-order bug and passes after the fix.](https://raw.githubusercontent.com/Muzaqil555/gemini-pro-mcp/main/docs/checkout-review.gif)](https://github.com/Muzaqil555/gemini-pro-mcp/releases/download/v0.1.7/checkout-review.mp4)
+
+[Watch the 30-second review (MP4)](https://github.com/Muzaqil555/gemini-pro-mcp/releases/download/v0.1.7/checkout-review.mp4) · Edited excerpts from a real Claude Code session.
 
 If it saves you an API bill or a tab switch, a ⭐ helps other AI Pro users find it.
 
@@ -45,6 +56,8 @@ Ask your agent things like:
 
 <p align="center"><img src="https://raw.githubusercontent.com/Muzaqil555/gemini-pro-mcp/main/docs/demo.svg" alt="Demo: doctor checks the setup, Claude asks Gemini for a code review on the AI Pro plan, then reads the Flow credits left" width="900"></p>
 
+<p align="center"><img src="https://raw.githubusercontent.com/Muzaqil555/gemini-pro-mcp/main/docs/demo.gif" alt="Demo: one sentence in Claude Code becomes a 2 minute video of a day in Baku, made in Google Flow on the AI Pro plan's credits" width="720"></p>
+
 ## How it compares
 
 Most Gemini MCP servers give your agent one thing: a chat with Gemini, or the Gemini API's media models. This one covers the whole AI Pro plan.
@@ -58,7 +71,7 @@ Most Gemini MCP servers give your agent one thing: a chat with Gemini, or the Ge
 | Google Flow: any-length videos, every Flow tool | ✅ | — | — | — |
 | Gemini Notebooks (Audio Overviews, quizzes...) | ✅ | — | — | — |
 | Jules coding agent | ✅ | — | — | — |
-| One-command setup for Claude Code, Codex, Antigravity and Gemini CLI | ✅ `setup` + `doctor` | Claude Code and Desktop | Claude Code | Claude Code |
+| One-command setup for seven MCP clients | ✅ `setup` + `doctor` | Claude Code and Desktop | Claude Code | Claude Code |
 
 Based on each project's README in November 2026. Corrections are welcome in an issue.
 

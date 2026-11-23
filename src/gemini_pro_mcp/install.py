@@ -199,9 +199,8 @@ def server_command(browser: bool) -> tuple[str, list[str]]:
     uvx = shutil.which("uvx")
     if not uvx:
         return sys.executable, ["-m", "gemini_pro_mcp.server"]
-    if browser:
-        return uvx, ["--from", "gemini-pro-mcp[flow]", "gemini-pro-mcp"]
-    return uvx, ["gemini-pro-mcp"]
+    extra = "[flow]" if browser else ""
+    return uvx, ["--from", f"gemini-pro-mcp{extra}=={__version__}", "gemini-pro-mcp"]
 
 
 def server_env(browser: bool, auto_approve: bool) -> dict[str, str]:
@@ -409,9 +408,14 @@ def install_client(
         return run_commands(claude_commands(exe, name, command, args, env), dry_run)
     if client == "agy":
         exe = settings.agy_path or shutil.which("agy")
-        if not exe:
-            return None, "Antigravity CLI not found"
-        return run_commands(agy_commands(exe, name, command, args, env), dry_run)
+        if exe:
+            return run_commands(agy_commands(exe, name, command, args, env), dry_run)
+        path = home / ".gemini" / "config" / "mcp_config.json"
+        if not (path.is_file() or shutil.which("antigravity")):
+            return None, "Antigravity not found"
+        return _install_json_client(
+            path, name=name, command=command, args=args, env=env, dry_run=dry_run
+        )
     if client == "codex":
         folder = Path(os.environ.get("CODEX_HOME") or home / ".codex")
         if not (shutil.which("codex") or folder.is_dir()):
@@ -459,7 +463,7 @@ def install_client(
 LABELS = {
     "claude": "Claude Code",
     "codex": "Codex",
-    "agy": "Antigravity CLI",
+    "agy": "Antigravity",
     "gemini": "Gemini CLI",
     "cursor": "Cursor",
     "claude-desktop": "Claude Desktop",

@@ -28,9 +28,12 @@ def test_extension_and_plugin_manifests_match_package():
     plugin = json.loads((plugin_dir / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
     market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
     assert extension["version"] == plugin["version"] == __version__
-    assert extension["mcpServers"]["gemini-pro"] == {"command": "uvx", "args": ["gemini-pro-mcp"]}
+    assert extension["mcpServers"]["gemini-pro"] == {
+        "command": "uvx",
+        "args": ["--from", f"gemini-pro-mcp=={__version__}", "gemini-pro-mcp"],
+    }
     # The Claude plugin directory only accepts a launcher pinned to a full git commit
-    # (a PyPI version is not a pin there). After a release, set it to the tag's commit.
+    # (a PyPI version is not a pin there). Pin the server commit before tagging the release.
     server = plugin["mcpServers"]["gemini-pro"]
     assert server["command"] == "uvx"
     flag, source, script = server["args"]

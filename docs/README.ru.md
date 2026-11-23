@@ -2,7 +2,9 @@
 
 [English](../README.md) · [Türkçe](README.tr.md) · **Русский** · [Azərbaycanca](README.az.md)
 
-**Ваша подписка Google AI Pro внутри Claude, Codex и Gemini CLI.** Gemini 4 Argon, Deep Research, видео во Flow, Gemini Notebooks, Jules и всё остальное, за что вы уже платите, — до 36 инструментов MCP. Настраивается одной командой.
+**Ваша подписка Google AI Pro внутри Claude Code, Gemini CLI, Antigravity, Cursor, Codex, Claude Desktop и Windsurf.** Gemini 4 Argon, Deep Research, видео во Flow, Gemini Notebooks, Jules и всё остальное, за что вы уже платите, — до 36 инструментов MCP. Настраивается одной командой.
+
+[Команда установки для вашего клиента и 30-секундная демонстрация ревью](../README.md#try-it-in-your-coding-agent)
 
 <p align="center"><img src="demo.gif" alt="Демо: одна фраза в Claude Code превращается в двухминутное видео об одном дне в Баку, созданное в Google Flow на кредиты плана AI Pro" width="720"></p>
 
