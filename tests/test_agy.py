@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 import time
+import tracemalloc
 from pathlib import Path
 
 import pytest
@@ -189,6 +190,27 @@ async def test_ask_explains_an_empty_answer_with_what_agy_said(settings, monkeyp
     text = agy.format_result(await agy.ask(settings, "hi"))
     assert text.startswith("Gemini returned no text.")
     assert "agy said: jetski: no output produced" in text
+
+
+def test_with_files_does_not_load_a_large_file_into_memory(tmp_path):
+    video = tmp_path / "clip.mp4"
+    with video.open("wb") as f:
+        f.truncate(200 * 1024 * 1024)  # sparse: 200 MB on paper, nothing on disk
+    tracemalloc.start()
+    try:
+        prompt = agy.with_files("Describe it.", [video])
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert f"- {video}" in prompt
+    assert peak < 5 * 1024 * 1024
+
+
+def test_read_text_file_rejects_text_over_the_limit(tmp_path):
+    path = tmp_path / "notes.txt"
+    path.write_text("é" * 11, encoding="utf-8")  # 11 characters, 22 bytes
+    assert agy.read_text_file(path, max_chars=11) == "é" * 11
+    assert agy.read_text_file(path, max_chars=10) is None
 
 
 def test_with_files_includes_small_text_files_and_lists_the_rest(tmp_path):
