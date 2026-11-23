@@ -281,10 +281,16 @@ def gemini_settings(text: str, name: str, command: str, args: list[str], env: di
     (except comments, which JSON cannot hold; setup keeps the old file as .bak)."""
     text = strip_json_comments(text)
     data = json.loads(text) if text.strip() else {}
+    if not isinstance(data, dict):
+        raise ValueError("the file is not a JSON object")
+    if data.get("mcpServers") is None:
+        data["mcpServers"] = {}
+    if not isinstance(data["mcpServers"], dict):
+        raise ValueError('"mcpServers" is not a JSON object')
     server: dict = {"command": command, "args": args, "timeout": TOOL_TIMEOUT_SECONDS * 1000}
     if env:
         server["env"] = env
-    data.setdefault("mcpServers", {})[name] = server
+    data["mcpServers"][name] = server
     return json.dumps(data, indent=2, ensure_ascii=False) + "\n"
 
 
@@ -358,8 +364,8 @@ def install_client(
         text = path.read_text(encoding="utf-8") if path.exists() else ""
         try:
             new = gemini_settings(text, name, command, args, env)
-        except json.JSONDecodeError as e:
-            return False, f"{path} is not valid JSON ({e}); fix it and run setup again"
+        except ValueError as e:  # includes json.JSONDecodeError
+            return False, f"{path} is not valid settings ({e}); fix it and run setup again"
         return write_file(path, new, dry_run)
     raise ValueError(client)
 

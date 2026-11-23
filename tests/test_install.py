@@ -2,6 +2,8 @@ import asyncio
 import dataclasses
 import json
 
+import pytest
+
 from gemini_pro_mcp import install
 from gemini_pro_mcp.config import Settings
 
@@ -83,6 +85,14 @@ def test_gemini_settings_accept_comments():
     assert data["theme"] == "dark"
     assert data["url"] == "https://example.com//path"
     assert "gemini-pro" in data["mcpServers"]
+
+
+def test_gemini_settings_handle_unexpected_shapes():
+    data = json.loads(install.gemini_settings('{"mcpServers": null}', "g", "uvx", [], {}))
+    assert data["mcpServers"]["g"]["command"] == "uvx"
+    for text in ("[]", '{"mcpServers": []}'):
+        with pytest.raises(ValueError, match="not a JSON object"):
+            install.gemini_settings(text, "g", "uvx", [], {})
 
 
 def test_client_commands():
