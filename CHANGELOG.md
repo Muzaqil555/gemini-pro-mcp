@@ -25,6 +25,7 @@
 - `jules_status` follows the activity list's `nextPageToken`. It read only the first page of 100 activities, so for a long session the "recent activity" it showed stopped at activity 100 and never included the latest question, progress or completion.
 - The `jules_*` tools return "Error: Jules API <code>: ..." when the API sends an error body that is not a JSON object, such as an error wrapped in a list. They used to fail with `AttributeError: 'list' object has no attribute 'get'`.
 - The `jules_*` tools answer "Error: Could not reach the Jules API (...)" when the computer is offline or a proxy or timeout stops the request. They used to fail with a raw `httpx` exception instead of a tool answer.
+- `jules_status`, `jules_approve_plan` and `jules_message` accept a Jules web link with a trailing slash, a query string or a `#` fragment. Before, the session id came out empty or with `?...` attached, and the call went to the wrong API path.
 
 ## 0.1.6
 

@@ -110,6 +110,21 @@ async def test_call_explains_api_errors_of_any_shape(monkeypatch, body):
         await jules.call("GET", "sessions")
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        "123",
+        "sessions/123",
+        "https://jules.google.com/session/123",
+        "https://jules.google.com/session/123/",
+        "https://jules.google.com/session/123?tab=plan",
+        " https://jules.google.com/session/123#activity\n",
+    ],
+)
+def test_session_id_accepts_ids_names_and_web_links(value):
+    assert jules.session_id(value) == "123"
+
+
 def test_jules_needs_a_key(monkeypatch):
     monkeypatch.delenv("JULES_API_KEY", raising=False)
     with pytest.raises(jules.JulesError, match="jules.google.com/settings"):
