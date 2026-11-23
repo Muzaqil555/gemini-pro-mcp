@@ -7,6 +7,7 @@
 - `gemini_ask` no longer reads a whole file passed in `paths` to decide whether its text fits in the prompt. A large file, such as a video, used to be loaded into memory in full before it was listed by path; now at most about 80 KB of each file is read.
 - When the MCP client cancels a `gemini_*` tool call, agy and the processes it started are stopped. They used to keep running for up to the 10-minute timeout, so `gemini_code` could go on editing files after the user cancelled.
 - A `GEMINI_PRO_CHROME` that is not a program is reported as such. `doctor` used to show it as `[ok]` Chrome, and the browser tools then failed with a `FileNotFoundError` and a request to report a changed page. It may also be a program name on PATH, such as `chromium`.
+- `setup` keeps the comments above a Codex `config.toml` table that comes after this server's tables. Running setup again used to delete them along with the server's old settings.
 
 ## 0.1.6
 
