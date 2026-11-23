@@ -64,7 +64,7 @@ def chrome_missing() -> str:
     """Why find_chrome() found nothing, and what to do."""
     custom = os.environ.get("GEMINI_PRO_CHROME")
     if custom:
-        return f"GEMINI_PRO_CHROME is set to {custom!r}, which is not a program; fix or unset it"
+        return f"GEMINI_PRO_CHROME is set to '{custom}', which is not a program; fix or unset it"
     return "install Google Chrome or set GEMINI_PRO_CHROME to its path"
 
 
