@@ -25,6 +25,7 @@ from mcp.server.mcpserver import Context, MCPServer
 from mcp_types import ToolAnnotations
 
 from .config import Settings, env_file, spending_note
+from .outputs import reserve_output
 
 try:  # The Interactions API raises its own error classes.
     from google.genai._gaos.lib import compat_errors
@@ -81,15 +82,6 @@ class Media:
         return self._client
 
     # -- files -------------------------------------------------------------
-
-    def save_path(self, name: str) -> Path:
-        self.settings.output_dir.mkdir(parents=True, exist_ok=True)
-        path = self.settings.output_dir / name
-        n = 2
-        while path.exists():
-            path = path.with_name(f"{Path(name).stem}-{n}{Path(name).suffix}")
-            n += 1
-        return path
 
     async def download(self, content: Any) -> bytes:
         """Bytes of an output_video/output_image block (inline data or file URI)."""
@@ -165,12 +157,16 @@ class Media:
         failed = failure_text(interaction)
         if failed:
             return failed
-        data = await self.download(interaction.output_video)
-        # Forget the wanted name only once the file is saved, so that a retry
-        # with video_check after a failed download still uses it.
-        name = self.names.pop(interaction.id, None) or make_file_name("video", None, "mp4")
-        path = self.save_path(name)
-        path.write_bytes(data)
+        name = self.names.get(interaction.id) or make_file_name("video", None, "mp4")
+        try:
+            data = await self.download(interaction.output_video)
+            with reserve_output(self.settings.output_dir / name) as path:
+                path.write_bytes(data)
+        except API_ERRORS as e:
+            return f"{describe_api_error(e)} Retry with video_check id '{interaction.id}'."
+        except (MediaError, OSError) as e:
+            return f"Error: {e}. Retry with video_check id '{interaction.id}'."
+        self.names.pop(interaction.id, None)
         return (
             f"Saved: {path} ({path.stat().st_size / 1024 / 1024:.1f} MB)\n"
             f"id: {interaction.id} (pass it to video_edit to change or extend this video)"
@@ -511,8 +507,10 @@ def register(mcp: MCPServer, settings: Settings) -> Media:
                 said = getattr(interaction, "output_text", None)
                 return "Error: No image came back." + (f" Gemini said: {said}" if said else "")
             extension = (mimetypes.guess_extension(image.mime_type or "") or ".png").lstrip(".")
-            path = media.save_path(make_file_name(prompt, file_name, extension))
-            path.write_bytes(await media.download(image))
+            data = await media.download(image)
+            name = make_file_name(prompt, file_name, extension)
+            with reserve_output(settings.output_dir / name) as path:
+                path.write_bytes(data)
             return f"Saved: {path}\nid: {interaction.id} (pass it as previous_id to refine)"
         except API_ERRORS as e:
             return describe_api_error(e)

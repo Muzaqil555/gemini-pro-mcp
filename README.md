@@ -15,13 +15,15 @@
 [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/muzaqil555/gemini-pro-mcp)
 ![Works with](https://img.shields.io/badge/works%20with-Claude%20%C2%B7%20Codex%20%C2%B7%20Antigravity%20%C2%B7%20Gemini%20CLI-555)
 
-<p align="center"><b>36 tools · no API bill for Gemini · one command for Claude Code, Codex, Antigravity and Gemini CLI</b></p>
+<p align="center"><b>17 tools by default · 36 with browser tools enabled</b></p>
 
 <p align="center"><img src="https://raw.githubusercontent.com/Muzaqil555/gemini-pro-mcp/main/docs/demo.gif" alt="Demo: one sentence in Claude Code becomes a 2 minute video of a day in Baku, made in Google Flow on the AI Pro plan's credits" width="720"></p>
 
 ```bash
 uvx gemini-pro-mcp setup
 ```
+
+After restarting your client, ask it to call `google_pro_benefits` and name the tool for reviewing a local file. This first call works offline without an API key. To try a real review, sign in with `agy` and ask Gemini for a second opinion on one file.
 
 If it saves you an API bill or a tab switch, a ⭐ helps other AI Pro users find it.
 
@@ -68,7 +70,7 @@ One MCP server, five ways into Google's AI:
 |---|---|---|---|
 | **Gemini (subscription)** | `gemini_ask`, `gemini_research`, `gemini_code`, `gemini_agents`, `gemini_models` | [Antigravity CLI](https://antigravity.google) signed in with your Google AI Pro/Ultra account | Free: uses your plan's limits |
 | **Jules** | `jules_start`, `jules_status`, `jules_approve_plan`, `jules_message`, `jules_sources`, `jules_sessions` | Official Jules API (`JULES_API_KEY`) | Your plan's Jules limits |
-| **Media (Gemini API)** | `video_generate`, `video_edit`, `video_check`, `image_generate`, `video_stitch` | Official Gemini API: Omni Flash video, Nano Banana images | Paid per use (AI Pro's monthly Cloud credit can cover it) |
+| **Media (Gemini API)** | `video_generate`, `video_edit`, `video_check`, `image_generate`, `video_stitch` | Official Gemini API: Omni Flash video, Nano Banana images | Generation is billed per use. Checking a result and stitching local clips are free. |
 | **Google AI web apps** *(experimental)* | `gemini_app`, `gemini_app_result`, `google_ai_mode`, `notebook_*`, `google_page`, `google_act`, `google_pro_benefits` | Your own signed-in Chrome: Gemini app, Notebooks, AI Mode, AI Studio, Colab, Flow Music, Docs | Your plan's limits |
 | **Flow** *(experimental)* | `flow_make_video`, `flow_job`, `flow_generate`, `flow_approve`, `flow_reject`, `flow_collect`, `flow_status`, `flow_tools`, `flow_open_tool`: **every Flow feature and tool** | Your own signed-in Chrome at flow.google.com | Your plan's monthly Flow credits (e.g. 12 credits for an 8 s video) |
 
@@ -76,7 +78,7 @@ One MCP server, five ways into Google's AI:
 
 ### 1. Prerequisites
 
-- [uv](https://docs.astral.sh/uv/) (or Python 3.10+ with pip)
+- [uv](https://docs.astral.sh/uv/) for the commands below. With Python 3.10+ and pip, install `gemini-pro-mcp` (or `gemini-pro-mcp[flow]` for browser tools) and run `gemini-pro-mcp setup` in that environment.
 - For the **Gemini tools**: install the [Antigravity CLI](https://antigravity.google), run `agy` once and sign in with your Google AI Pro/Ultra account.
 - For the **media tools**: an API key from [Google AI Studio](https://aistudio.google.com/apikey) with billing enabled. See [Costs](#costs).
 
@@ -88,14 +90,14 @@ uvx gemini-pro-mcp setup
 
 `setup` finds Claude Code, Codex, the Antigravity CLI and the Gemini CLI on your computer, adds the server to each one, and then checks what works: the Antigravity sign-in, your API keys, Chrome and the Flow profile. Each item it reports as missing comes with the fix. Restart the clients afterwards.
 
-- `--browser` also enables the Flow, Gemini app, AI Mode and Notebook tools. Run `gemini-pro-mcp flow-login` once afterwards and sign in to Google in the window that opens.
+- `--browser` also enables the Flow, Gemini app, AI Mode and Notebook tools. Run `uvx gemini-pro-mcp flow-login` once afterwards and sign in to Google in the window that opens.
 - `--auto-approve` pre-approves spending, so paid tools run without asking first.
 - `--client codex` (repeatable) sets up only the clients you name. `--dry-run` shows the changes without making them.
 
 Edited config files are backed up next to themselves (`config.toml.bak`, `settings.json.bak`). To check things again later, without changing anything:
 
 ```bash
-uvx gemini-pro-mcp doctor --flow
+uvx --from "gemini-pro-mcp[flow]" gemini-pro-mcp doctor --flow
 ```
 
 To add the server by hand instead, use the client's own command:

@@ -143,10 +143,22 @@ def login(settings: Settings) -> int:
 _shared: dict = {"playwright": None, "browser": None, "loop": None}
 
 
+_connect_lock: asyncio.Lock | None = None
+_connect_loop: asyncio.AbstractEventLoop | None = None
+
+
 async def connect(settings: Settings):
     """Returns (playwright, browser) attached to the signed-in Chrome profile.
     The connection is shared and stays open; callers must not close it."""
+    global _connect_lock, _connect_loop
     loop = asyncio.get_running_loop()
+    if _connect_lock is None or _connect_loop is not loop:
+        _connect_lock, _connect_loop = asyncio.Lock(), loop
+    async with _connect_lock:
+        return await _connect(settings, loop)
+
+
+async def _connect(settings: Settings, loop: asyncio.AbstractEventLoop):
     browser = _shared["browser"]
     if browser is not None and _shared["loop"] is loop and browser.is_connected():
         return _shared["playwright"], browser
@@ -163,13 +175,19 @@ async def connect(settings: Settings):
             "(or `uvx --with playwright gemini-pro-mcp`)."
         ) from e
     # launch_chrome blocks for up to 10 s while Chrome starts.
-    await asyncio.to_thread(launch_chrome, settings)
+    launch = asyncio.create_task(asyncio.to_thread(launch_chrome, settings))
+    try:
+        await asyncio.shield(launch)
+    except asyncio.CancelledError:
+        # The worker keeps running. Hold the startup lock until the port check finishes.
+        await asyncio.gather(launch, return_exceptions=True)
+        raise
     playwright = await async_playwright().start()
     try:
         browser = await playwright.chromium.connect_over_cdp(
             f"http://127.0.0.1:{settings.flow_cdp_port}"
         )
-    except Exception:
+    except BaseException:
         await playwright.stop()
         raise
     _shared.update(playwright=playwright, browser=browser, loop=loop)

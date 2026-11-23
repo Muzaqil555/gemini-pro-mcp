@@ -75,7 +75,9 @@ def check_url(url: str, *, operate: bool) -> str:
 
 def with_english(url: str) -> str:
     parts = urlsplit(url)
-    if "flowmusic.app" in parts.netloc or "hl" in dict(parse_qsl(parts.query)):
+    if "flowmusic.app" in parts.netloc or "hl" in dict(
+        parse_qsl(parts.query, keep_blank_values=True)
+    ):
         return url
     query = f"{parts.query}&hl=en" if parts.query else "hl=en"
     return urlunsplit(parts._replace(query=query))
@@ -406,7 +408,10 @@ def register(mcp: MCPServer, settings: Settings) -> None:
             The answer text, saved media and whether it is finished.
         """
         try:
-            if check_url(chat_url, operate=True) != "gemini.google.com":
+            host = check_url(chat_url, operate=True)
+            if host != "gemini.google.com" or not re.fullmatch(
+                r"/(?:u/\d+/)?(?:app|share|gem/[^/]+)/[\w-]+/?", urlsplit(chat_url).path
+            ):
                 raise FlowError(
                     "chat_url must be a Gemini app chat (https://gemini.google.com/...)."
                 )

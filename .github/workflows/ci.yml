@@ -25,6 +25,9 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -q
+      - name: Test video stitching with bundled ffmpeg
+        if: matrix.python == '3.13'
+        run: uv run --extra flow pytest -q tests/test_stitch.py
 
   # The image MCP directories (Glama) run: it must start and answer tools/list.
   docker:

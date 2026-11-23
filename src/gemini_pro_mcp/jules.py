@@ -9,6 +9,8 @@ JULES_API_KEY (never typed by this server).
 from __future__ import annotations
 
 import os
+from collections import deque
+from collections.abc import AsyncIterator
 from typing import Any
 
 import httpx
@@ -66,18 +68,20 @@ def session_id(value: str) -> str:
     return path.rsplit("/", 1)[-1]
 
 
-async def list_activities(sid: str, max_pages: int = 20) -> list[dict[str, Any]]:
-    """All activities of a session, oldest first. The API pages them 100 at a
-    time, so the newest ones of a long session are on the last page."""
-    items: list[dict[str, Any]] = []
+async def paged_items(path: str, field: str) -> AsyncIterator[dict[str, Any]]:
     params: dict[str, Any] = {"pageSize": 100}
-    for _ in range(max_pages):
-        page = await call("GET", f"sessions/{sid}/activities", params=params)
-        items += page.get("activities", [])
-        if not page.get("nextPageToken"):
-            break
-        params = {"pageSize": 100, "pageToken": page["nextPageToken"]}
-    return items
+    seen: set[str] = set()
+    while True:
+        page = await call("GET", path, params=params)
+        for item in page.get(field, []):
+            yield item
+        token = page.get("nextPageToken")
+        if not token:
+            return
+        if token in seen:
+            raise JulesError("Jules returned a repeated page token.")
+        seen.add(token)
+        params = {"pageSize": 100, "pageToken": token}
 
 
 def describe_activity(activity: dict[str, Any]) -> str:
@@ -113,14 +117,7 @@ def register(mcp: MCPServer, settings: Settings) -> None:
             link where the user connects GitHub.
         """
         try:
-            sources: list[dict[str, Any]] = []
-            params: dict[str, Any] = {"pageSize": 100}
-            for _ in range(20):  # the API returns at most 100 per page
-                data = await call("GET", "sources", params=params)
-                sources += data.get("sources", [])
-                if not data.get("nextPageToken"):
-                    break
-                params = {"pageSize": 100, "pageToken": data["nextPageToken"]}
+            sources = [s async for s in paged_items("sources", "sources")]
             return "\n".join(s.get("id", s.get("name", "")) for s in sources) or (
                 "No repositories connected. Connect GitHub at https://jules.google.com."
             )
@@ -206,7 +203,6 @@ def register(mcp: MCPServer, settings: Settings) -> None:
         try:
             sid = session_id(session)
             data = await call("GET", f"sessions/{sid}")
-            acts = await list_activities(sid) if activities > 0 else []
             lines = [
                 f"Session {sid}: {data.get('title', '')}",
                 f"State: {data.get('state', 'unknown')}",
@@ -215,7 +211,12 @@ def register(mcp: MCPServer, settings: Settings) -> None:
                 pr = output.get("pullRequest")
                 if pr:
                     lines.append(f"Pull request: {pr.get('url')} ({pr.get('title', '')})")
-            items = acts[-activities:] if activities > 0 else []
+            items: deque[dict[str, Any]] = deque()
+            if activities > 0:
+                async for item in paged_items(f"sessions/{sid}/activities", "activities"):
+                    items.append(item)
+                    if len(items) > activities:
+                        items.popleft()
             if items:
                 lines.append("Recent activity:")
                 lines += [describe_activity(a) for a in items]

@@ -9,12 +9,14 @@ from __future__ import annotations
 import asyncio
 import shutil
 import tempfile
+from contextlib import suppress
 from pathlib import Path
 
 from mcp.server.mcpserver import MCPServer
 from mcp_types import ToolAnnotations
 
 from .config import Settings
+from .outputs import reserve_output
 
 INSTALL_HINT = (
     "Joining videos needs ffmpeg. Install ffmpeg so that `ffmpeg` is on PATH, or install "
@@ -25,15 +27,6 @@ INSTALL_HINT = (
 
 class StitchError(RuntimeError):
     pass
-
-
-def unique_path(folder: Path, stem: str, suffix: str) -> Path:
-    path = folder / f"{stem}{suffix}"
-    n = 2
-    while path.exists():
-        path = folder / f"{stem}-{n}{suffix}"
-        n += 1
-    return path
 
 
 def ffmpeg_exe() -> str:
@@ -67,7 +60,8 @@ async def _run(args: list[str]) -> tuple[int, str]:
     try:
         _, stderr = await process.communicate()
     except asyncio.CancelledError:  # the client cancelled the tool call
-        process.kill()
+        with suppress(ProcessLookupError):
+            process.kill()
         await process.wait()
         raise
     return process.returncode, stderr.decode("utf-8", errors="replace")
@@ -83,40 +77,38 @@ async def stitch(clips: list[Path], output: Path) -> Path:
             raise StitchError(f"Clip not found: {clip}")
     exe = ffmpeg_exe()
     output.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory() as tmp:
+    with tempfile.TemporaryDirectory(dir=output.parent) as tmp:
+        encoded = Path(tmp) / ("joined" + output.suffix)
         listing = Path(tmp) / "clips.txt"
         listing.write_text(concat_listing(clips), encoding="utf-8")
         base = [exe, "-y", "-hide_banner", "-loglevel", "error", "-f", "concat", "-safe", "0"]
-        try:
-            code, err = await _run([*base, "-i", str(listing), "-c", "copy", str(output)])
-            if code != 0:
-                code, err = await _run(
-                    [
-                        *base,
-                        "-i",
-                        str(listing),
-                        "-c:v",
-                        "libx264",
-                        "-preset",
-                        "veryfast",
-                        "-crf",
-                        "18",
-                        "-c:a",
-                        "aac",
-                        "-movflags",
-                        "+faststart",
-                        str(output),
-                    ]
-                )
-        except asyncio.CancelledError:
-            output.unlink(missing_ok=True)
-            raise
+        code, err = await _run([*base, "-i", str(listing), "-c", "copy", str(encoded)])
+        if code != 0:
+            code, err = await _run(
+                [
+                    *base,
+                    "-i",
+                    str(listing),
+                    "-c:v",
+                    "libx264",
+                    "-preset",
+                    "veryfast",
+                    "-crf",
+                    "18",
+                    "-c:a",
+                    "aac",
+                    "-movflags",
+                    "+faststart",
+                    str(encoded),
+                ]
+            )
         # The concat demuxer stops at a clip it can't read, and ffmpeg still exits
         # with 0 after writing only the clips before it.
         if code != 0 or "Impossible to open" in err:
-            output.unlink(missing_ok=True)
             raise StitchError(f"ffmpeg failed: {err.strip()[:600]}")
-    return output
+        with reserve_output(output) as path:
+            encoded.replace(path)
+        return path
 
 
 def register(mcp: MCPServer, settings: Settings) -> None:
@@ -137,7 +129,7 @@ def register(mcp: MCPServer, settings: Settings) -> None:
             "Saved: <path>" with the joined video, or an error such as a missing clip.
         """
         try:
-            path = unique_path(settings.output_dir, Path(file_name).stem, ".mp4")
+            path = settings.output_dir / f"{Path(file_name).stem}.mp4"
             path = await stitch([Path(c).expanduser() for c in clips], path)
             return f"Saved: {path}"
         except StitchError as e:

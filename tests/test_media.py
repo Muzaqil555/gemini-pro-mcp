@@ -104,10 +104,23 @@ async def test_video_check_keeps_file_name_after_failed_download(setup):
     server, use, tmp = setup
     fake = use(FakeInteractions({"output_video": SimpleNamespace(data=None, uri=None)}))
     result = text_of(await server.call_tool("video_generate", {"prompt": "x", "file_name": "ball"}))
-    assert result.startswith("Error:")
+    assert result.startswith("Error:") and "video_check id 'int-1'" in result
     fake.output = video_output()
     result = text_of(await server.call_tool("video_check", {"id": "int-1"}))
     assert f"Saved: {tmp / 'out' / 'ball.mp4'}" in result
+
+
+async def test_disk_error_preserves_name_for_video_check(setup):
+    server, use, tmp = setup
+    fake = use(FakeInteractions(video_output()))
+    folder = tmp / "out"
+    folder.write_bytes(b"blocks directory creation")
+    result = text_of(await server.call_tool("video_generate", {"prompt": "x", "file_name": "ball"}))
+    assert "video_check id 'int-1'" in result
+    folder.unlink()
+    result = text_of(await server.call_tool("video_check", {"id": "int-1"}))
+    assert f"Saved: {folder / 'ball.mp4'}" in result
+    assert len(fake.requests) == 1
 
 
 async def test_video_edit_needs_exactly_one_source(setup):

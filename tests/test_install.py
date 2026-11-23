@@ -90,6 +90,8 @@ def test_gemini_settings_accept_comments():
 def test_gemini_settings_handle_unexpected_shapes():
     data = json.loads(install.gemini_settings('{"mcpServers": null}', "g", "uvx", [], {}))
     assert data["mcpServers"]["g"]["command"] == "uvx"
+    with pytest.raises(json.JSONDecodeError):
+        install.gemini_settings('{"n":1/*note*/0}', "g", "uvx", [], {})
     for text in ("[]", '{"mcpServers": []}'):
         with pytest.raises(ValueError, match="not a JSON object"):
             install.gemini_settings(text, "g", "uvx", [], {})
@@ -107,6 +109,7 @@ def test_client_commands():
 
 
 def test_server_command(monkeypatch, tmp_path):
+    monkeypatch.setattr(install.shutil, "which", lambda name: name)
     monkeypatch.setattr(install, "source_root", lambda: None)
     _, args = install.server_command(browser=False)
     assert args == ["gemini-pro-mcp"]
@@ -115,6 +118,14 @@ def test_server_command(monkeypatch, tmp_path):
     monkeypatch.setattr(install, "source_root", lambda: tmp_path)
     _, args = install.server_command(browser=True)
     assert args == ["--directory", tmp_path.as_posix(), "run", "--extra", "flow", "gemini-pro-mcp"]
+
+
+def test_pip_only_setup_registers_current_interpreter(monkeypatch):
+    monkeypatch.setattr(install.shutil, "which", lambda name: None)
+    assert install.server_command(False) == (
+        install.sys.executable,
+        ["-m", "gemini_pro_mcp.server"],
+    )
 
 
 def test_setup_writes_file_clients(monkeypatch, tmp_path, capsys):
@@ -148,7 +159,10 @@ def test_setup_writes_file_clients(monkeypatch, tmp_path, capsys):
     assert "GEMINI_PRO_ENABLE_BROWSER" in (tmp_path / ".codex" / "config.toml").read_text()
     data = json.loads((tmp_path / ".gemini" / "settings.json").read_text())
     assert data["theme"] == "dark" and "gemini-pro" in data["mcpServers"]
-    assert (tmp_path / ".gemini" / "settings.json.bak").exists()
+    backup = tmp_path / ".gemini" / "settings.json.bak"
+    assert backup.read_text() == '{"theme": "dark"}'
+    assert run() == 0
+    assert backup.read_text() == '{"theme": "dark"}'
 
 
 def test_setup_without_clients_fails(monkeypatch, tmp_path):
@@ -166,6 +180,26 @@ def test_setup_without_clients_fails(monkeypatch, tmp_path):
         home=tmp_path,
     )
     assert code == 1
+
+
+def test_setup_reports_partial_registration(monkeypatch, tmp_path):
+    def register(client, **kwargs):
+        return (True, "added") if client == "codex" else (False, "invalid settings")
+
+    monkeypatch.setattr(install, "install_client", register)
+    monkeypatch.setattr(install, "run_checks", lambda settings: [])
+    assert (
+        install.setup(
+            Settings.from_env(),
+            clients=["codex", "gemini"],
+            name="test",
+            browser=False,
+            auto_approve=False,
+            dry_run=False,
+            home=tmp_path,
+        )
+        == 1
+    )
 
 
 def test_key_check(monkeypatch):

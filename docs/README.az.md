@@ -12,6 +12,8 @@
 uvx gemini-pro-mcp setup
 ```
 
+Klienti yenidən başladın və ondan `google_pro_benefits` alətini çağırıb lokal faylı hansı alətlə yoxlaya biləcəyinizi soruşun. Bu ilk sınaq internet və API açarı tələb etmir. Sonra `agy` ilə hesabınıza daxil olub Gemini-dən bir fayl haqqında ikinci rəy alın.
+
 Faydalı olsa, bir ⭐ digər AI Pro istifadəçilərinin onu tapmasına kömək edir.
 
 ## Niyə
@@ -41,14 +43,14 @@ uvx gemini-pro-mcp setup
 
 `setup` kompüterinizdə Claude Code, Codex, Antigravity CLI və Gemini CLI-ni tapır, serveri hər birinə əlavə edir və nəyin işlədiyini yoxlayır. Sonra klientləri yenidən başladın.
 
-- `--browser`: Flow, Gemini tətbiqi, AI Mode və Notebook alətlərini də açır. Sonra `gemini-pro-mcp flow-login` əmrini bir dəfə işə salıb açılan pəncərədə Google-a daxil olun.
+- `--browser`: Flow, Gemini tətbiqi, AI Mode və Notebook alətlərini də açır. Sonra `uvx gemini-pro-mcp flow-login` əmrini bir dəfə işə salıb açılan pəncərədə Google-a daxil olun.
 - `--auto-approve`: pullu alətlər soruşmadan işləyir.
 - `--dry-run`: heç nəyi dəyişmədən nə ediləcəyini göstərir.
 
 Sonradan yoxlamaq üçün:
 
 ```bash
-uvx gemini-pro-mcp doctor --flow
+uvx --from "gemini-pro-mcp[flow]" gemini-pro-mcp doctor --flow
 ```
 
 Media alətləri (`video_generate`, `image_generate`) üçün [Google AI Studio](https://aistudio.google.com/apikey)-dan API açarı lazımdır. Onu `~/.config/gemini-pro-mcp/.env` faylına `GEMINI_API_KEY=...` kimi yazın.

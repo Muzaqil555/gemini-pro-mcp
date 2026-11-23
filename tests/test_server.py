@@ -78,6 +78,7 @@ def test_pages_open_in_english():
         == "https://www.google.com/search?q=a&shl=1&hl=en"
     )
     assert with_english("https://www.google.com/search?hl=de&q=a").endswith("?hl=de&q=a")
+    assert with_english("https://www.google.com/?hl=") == "https://www.google.com/?hl="
     assert with_english("https://www.flowmusic.app/") == "https://www.flowmusic.app/"
 
 
@@ -139,6 +140,7 @@ def test_parse_shots():
 
 def test_parse_shots_ignores_brackets_around_the_array():
     after = '```json\n["a red tram", "the tram stops"]\n```\nBoth shots are [8 s].'
+    assert parse_shots('Durations [8, 8]: ["tram", "bus"]', 2) == ["tram", "bus"]
     assert parse_shots(after, 2) == ["a red tram", "the tram stops"]
     before = 'Shots [1] and [2], [0-8s] and [8-16s]:\n["a red tram", "the tram stops"]'
     assert parse_shots(before, 2) == ["a red tram", "the tram stops"]

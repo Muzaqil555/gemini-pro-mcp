@@ -15,6 +15,8 @@ from gemini_pro_mcp.config import load_env_file, parse_env_line
         ("GEMINI_API_KEY='abc123'", ("GEMINI_API_KEY", "abc123")),
         ("GEMINI_API_KEY=abc123  # from AI Studio", ("GEMINI_API_KEY", "abc123")),
         ('NOTE="keep # this"', ("NOTE", "keep # this")),
+        ('KEY="a # b" # note', ("KEY", "a # b")),
+        ("KEY=abc\t# note", ("KEY", "abc")),
         ("PASSWORD=ends-with-quote'", ("PASSWORD", "ends-with-quote'")),
         ("URL=https://example.com/a#frag", ("URL", "https://example.com/a#frag")),
         ("EMPTY=", ("EMPTY", "")),

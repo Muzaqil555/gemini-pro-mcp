@@ -18,6 +18,7 @@ from mcp_types import ToolAnnotations
 
 from .config import Settings
 from .google_web import Tab, failure, local_files
+from .outputs import reserve_output
 
 HOST = "notebook.google.com"
 HOME = "https://notebook.google.com/"
@@ -76,16 +77,11 @@ def notebook_id(value: str) -> str:
     return match.group(1)
 
 
-def download_path(folder: Path, suggested: str) -> Path:
-    """A path in `folder` for a download that never replaces an existing file."""
-    name = Path(Path(suggested or "notebook-download").name)
-    folder.mkdir(parents=True, exist_ok=True)
-    path = folder / name
-    n = 2
-    while path.exists():
-        path = folder / f"{name.stem}-{n}{name.suffix}"
-        n += 1
-    return path
+def download_path(folder: Path, suggested: str):
+    name = Path(suggested or "").name
+    if name in ("", ".."):
+        name = "notebook-download"
+    return reserve_output(folder / name)
 
 
 async def click_text(page, text: str, timeout: int = 10_000) -> None:
@@ -307,11 +303,13 @@ def register(mcp: MCPServer, settings: Settings) -> None:
                                 "menuitem", name=re.compile("Download", re.I)
                             ).first.click()
                         download = await info.value
-                        path = download_path(settings.output_dir, download.suggested_filename)
-                        await download.save_as(path)
+                        with download_path(
+                            settings.output_dir, download.suggested_filename
+                        ) as path:
+                            await download.save_as(path)
                         saved.append(path)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        return f"{STUDIO[output]} is ready, but its download failed. {failure(e)}"
                 status = "still generating" if "Generating" in panel else "ready"
                 changed = "" if panel != before else " (panel unchanged; check the notebook)"
                 lines = [f"{STUDIO[output]}: {status}{changed}", *[f"Saved: {p}" for p in saved]]

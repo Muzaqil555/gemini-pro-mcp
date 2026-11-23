@@ -16,6 +16,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -117,11 +118,12 @@ async def flow_live_check(settings: Settings) -> Check:
                 return Check("Flow sign-in", False, "signed out: run `gemini-pro-mcp flow-login`")
             project = await flow.open_project()
             credits = await flow.credits()
-            return Check("Flow sign-in", True, f"project {project}, {credits or '?'} credits")
+            balance = f"{credits} credits" if credits is not None else "credit balance unavailable"
+            return Check("Flow project", True, f"project {project}, {balance}")
     except Exception as e:  # browser automation fails in many ways
         lines = str(e).strip().splitlines()
         detail = f"{type(e).__name__}: {lines[0][:200]}" if lines else type(e).__name__
-        return Check("Flow sign-in", False, detail)
+        return Check("Flow project", False, detail)
 
 
 def run_checks(settings: Settings, *, live_flow: bool = False) -> list[Check]:
@@ -161,7 +163,7 @@ def doctor(settings: Settings, *, live_flow: bool) -> int:
     print_checks(checks)
     print("\n[ok] works  [!!] broken  [--] optional, not set up")
     if not live_flow:
-        print("Add --flow to also open Flow and check the sign-in and credits.")
+        print("To check the Flow sign-in and credits, use --flow with the [flow] extra installed.")
     return 1 if any(c.ok is False for c in checks) else 0
 
 
@@ -181,18 +183,22 @@ def source_root() -> Path | None:
 def server_command(browser: bool) -> tuple[str, list[str]]:
     """The command a client runs to start this server, with the Flow extra if needed."""
     root = source_root()
-    if root:
+    uv = shutil.which("uv")
+    if root and uv:
         extra = ["--extra", "flow"] if browser else []
-        return shutil.which("uv") or "uv", [
+        return uv, [
             "--directory",
             root.as_posix(),
             "run",
             *extra,
             "gemini-pro-mcp",
         ]
+    uvx = shutil.which("uvx")
+    if not uvx:
+        return sys.executable, ["-m", "gemini_pro_mcp.server"]
     if browser:
-        return shutil.which("uvx") or "uvx", ["--from", "gemini-pro-mcp[flow]", "gemini-pro-mcp"]
-    return shutil.which("uvx") or "uvx", ["gemini-pro-mcp"]
+        return uvx, ["--from", "gemini-pro-mcp[flow]", "gemini-pro-mcp"]
+    return uvx, ["gemini-pro-mcp"]
 
 
 def server_env(browser: bool, auto_approve: bool) -> dict[str, str]:
@@ -273,7 +279,7 @@ JSON_STRING_OR_COMMENT = re.compile(r'("(?:\\.|[^"\\])*")|//[^\n]*|/\*.*?\*/', r
 
 
 def strip_json_comments(text: str) -> str:
-    return JSON_STRING_OR_COMMENT.sub(lambda m: m.group(1) or "", text)
+    return JSON_STRING_OR_COMMENT.sub(lambda m: m.group(1) or " ", text)
 
 
 def gemini_settings(text: str, name: str, command: str, args: list[str], env: dict[str, str]):
@@ -326,6 +332,8 @@ def write_file(path: Path, text: str, dry_run: bool) -> tuple[bool, str]:
         return True, f"would write {path}"
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
+        if path.read_text(encoding="utf-8") == text:
+            return True, f"already configured: {path}"
         backup = path.with_name(path.name + ".bak")
         shutil.copy2(path, backup)
     path.write_text(text, encoding="utf-8")
@@ -401,6 +409,7 @@ def setup(
         print("Settings: " + ", ".join(f"{k}={v}" for k, v in env.items()))
     print()
     added = 0
+    failed = False
     for client in clients:
         ok, detail = install_client(
             client,
@@ -414,15 +423,24 @@ def setup(
         )
         print(f"  {MARK[ok]} {LABELS[client].ljust(15)}  {detail}")
         added += ok is True
+        failed |= ok is False
     print("\nChecks:")
     # The registered command brings Playwright itself, so this process may lack it.
-    skip = {"Playwright"} if browser else {"Playwright", "Chrome", "Flow profile"}
+    skip = set() if browser else {"Playwright", "Chrome", "Flow profile"}
+    if browser and command != sys.executable:
+        skip.add("Playwright")
     checks = [c for c in run_checks(settings) if c.name not in skip]
     print_checks(checks)
-    if not added:
+    if not added and not failed:
         print("\nNo MCP client was found. Install one, or add the server command above by hand.")
         return 1
-    print("\nRestart the clients so they load the server.")
+    if failed:
+        print("\nSome clients could not be configured. See the [!!] entries above.")
+    if dry_run:
+        return int(failed)
+    if added:
+        print("\nRestart the configured clients so they load the server.")
     if browser and not settings.flow_profile_dir.is_dir():
-        print("Next: run `gemini-pro-mcp flow-login` and sign in to Google in the window.")
-    return 0
+        login = subprocess.list2cmdline([command, *args, "flow-login"])
+        print(f"Next: run {login} and sign in to Google in the window.")
+    return int(failed)
