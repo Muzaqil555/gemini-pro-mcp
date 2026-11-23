@@ -28,6 +28,7 @@
 - `jules_status`, `jules_approve_plan` and `jules_message` accept a Jules web link with a trailing slash, a query string or a `#` fragment. Before, the session id came out empty or with `?...` attached, and the call went to the wrong API path.
 - `jules_sources` lists every connected repository. It read only the first page of the Jules API (100 repositories), so with more connected, `jules_start` couldn't be pointed at the rest by name from the list.
 - `jules_status(activities=0)` shows only the state and pull request. It used to list every activity, because `[-0:]` is the whole list.
+- `notebook_studio` no longer overwrites an earlier Audio or Video Overview that Notebook downloads under the same file name. The new file gets a `-2`, `-3`... suffix, as `flow_*` and the media tools already do.
 
 ## 0.1.6
 
