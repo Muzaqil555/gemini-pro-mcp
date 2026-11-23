@@ -29,6 +29,7 @@
 - `jules_sources` lists every connected repository. It read only the first page of the Jules API (100 repositories), so with more connected, `jules_start` couldn't be pointed at the rest by name from the list.
 - `jules_status(activities=0)` shows only the state and pull request. It used to list every activity, because `[-0:]` is the whole list.
 - `notebook_studio` no longer overwrites an earlier Audio or Video Overview that Notebook downloads under the same file name. The new file gets a `-2`, `-3`... suffix, as `flow_*` and the media tools already do.
+- `notebook_ask` says when `wait_seconds` ran out while the notebook was still writing its answer. It used to return the cut-off text as if it were the whole answer.
 
 ## 0.1.6
 

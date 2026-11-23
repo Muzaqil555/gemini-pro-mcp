@@ -256,6 +256,11 @@ def register(mcp: MCPServer, settings: Settings) -> None:
                         continue
                     stable = stable + 1 if state["last"] == last else 0
                     last = state["last"]
+                if last and stable < 3:
+                    return (
+                        f"{last}\n\n(The answer was still being written when wait_seconds "
+                        "ran out; it may be cut off. Ask again with a longer wait_seconds.)"
+                    )
                 return last or "No answer yet; ask again in a moment."
         except Exception as e:  # browser automation can fail in many ways
             return failure(e)
