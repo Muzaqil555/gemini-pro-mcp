@@ -137,3 +137,20 @@ async def test_gemini_code_runs_in_the_folder(tmp_path, monkeypatch):
     assert "changed calc.py" in out
     assert seen["cwd"] == tmp_path.resolve()
     assert seen["args"][seen["args"].index("--mode") + 1] == "accept-edits"
+
+
+async def test_network_errors_are_reported_as_jules_errors(monkeypatch):
+    def offline(request):
+        raise httpx.ConnectError("Name or service not known", request=request)
+
+    real_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        jules.httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(transport=httpx.MockTransport(offline), **kwargs),
+    )
+    monkeypatch.setenv("JULES_API_KEY", "test-key")
+    mcp = MCPServer("test")
+    jules.register(mcp, Settings.from_env())
+    out = text_of(await mcp.call_tool("jules_sessions", {}))
+    assert out.startswith("Error: Could not reach the Jules API (ConnectError"), out

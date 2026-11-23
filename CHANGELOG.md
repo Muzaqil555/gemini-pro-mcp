@@ -24,6 +24,7 @@
 - `image_generate` returns "No image came back" with Gemini's own text when the model answers without an image, for example when it declines a prompt. Before, the tool failed with `AttributeError: 'NoneType' object has no attribute 'mime_type'`.
 - `jules_status` follows the activity list's `nextPageToken`. It read only the first page of 100 activities, so for a long session the "recent activity" it showed stopped at activity 100 and never included the latest question, progress or completion.
 - The `jules_*` tools return "Error: Jules API <code>: ..." when the API sends an error body that is not a JSON object, such as an error wrapped in a list. They used to fail with `AttributeError: 'list' object has no attribute 'get'`.
+- The `jules_*` tools answer "Error: Could not reach the Jules API (...)" when the computer is offline or a proxy or timeout stops the request. They used to fail with a raw `httpx` exception instead of a tool answer.
 
 ## 0.1.6
 

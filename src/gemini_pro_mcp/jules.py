@@ -35,14 +35,17 @@ def key() -> str:
 
 
 async def call(method: str, path: str, body: dict | None = None, params: dict | None = None):
-    async with httpx.AsyncClient(timeout=60) as client:
-        response = await client.request(
-            method,
-            f"{BASE}/{path.lstrip('/')}",
-            headers={"x-goog-api-key": key(), "Content-Type": "application/json"},
-            json=body,
-            params=params,
-        )
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            response = await client.request(
+                method,
+                f"{BASE}/{path.lstrip('/')}",
+                headers={"x-goog-api-key": key(), "Content-Type": "application/json"},
+                json=body,
+                params=params,
+            )
+    except httpx.TransportError as e:  # offline, DNS, proxy, timeout...
+        raise JulesError(f"Could not reach the Jules API ({type(e).__name__}: {e}).") from e
     if response.status_code >= 400:
         try:
             data = response.json()
