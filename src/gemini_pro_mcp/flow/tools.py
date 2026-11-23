@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import glob
 import inspect
 import json
 import re
@@ -511,6 +512,13 @@ def save_plan(folder: Path, prompt: str, lengths: list[int], shots: list[str]) -
     (folder / "plan.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), "utf-8")
 
 
+def finished_clip(folder: Path, stem: str) -> Path | None:
+    """The non-empty clip an earlier run of the job saved as `stem`, if any."""
+    # The stem comes from the user's file name, which may hold glob characters.
+    clips = [p for p in sorted(folder.glob(f"{glob.escape(stem)}.*")) if p.stat().st_size > 0]
+    return clips[0] if clips else None
+
+
 async def run_job(settings: Settings, job: dict) -> None:
     lengths, aspect = job["lengths"], job["aspect"]
     folder = settings.output_dir / job["stem"]
@@ -530,9 +538,9 @@ async def run_job(settings: Settings, job: dict) -> None:
         job["done_clips"] = 0
         for index, (shot, seconds) in enumerate(zip(shots, lengths, strict=True), start=1):
             stem = f"{job['stem']}-{index:02d}"
-            existing = [p for p in sorted(folder.glob(f"{stem}.*")) if p.stat().st_size > 0]
+            existing = finished_clip(folder, stem)
             if existing:  # done in an earlier run
-                clips.append(existing[0])
+                clips.append(existing)
                 job["clips"], job["done_clips"] = clips, index
                 continue
             job["status"] = f"generating clip {index}/{len(lengths)}"

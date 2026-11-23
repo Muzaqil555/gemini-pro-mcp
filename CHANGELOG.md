@@ -13,6 +13,7 @@
 - `file_name` in `video_generate`, `video_edit` and `image_generate` keeps dots that are not a media extension: `demo-v1.2` was saved as `demo-v1.mp4`, and now as `demo-v1.2.mp4`.
 - Videos that the Gemini API returns as a file link (1080p and 4k) are found again before download. The file name was read from the link together with its `:download` suffix, so the readiness check asked for a file that does not exist.
 - The browser tools start Chrome in a worker thread. While Chrome was starting (up to 10 seconds), the server used to stop answering every other tool call.
+- `flow_make_video` finds the clips of an earlier run again when `file_name` contains `[`, `]`, `*` or `?`. The name was used as a glob pattern, so a resumed job did not see the clips it had already saved and generated them again, spending Flow credits a second time.
 
 ## 0.1.6
 
