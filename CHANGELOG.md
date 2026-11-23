@@ -19,6 +19,7 @@
 - `gemini_app_result` only accepts Gemini app chat URLs. A URL of another supported site (Docs, Drive, Flow...) was opened in the Gemini tab, where no answer can be found, so the tool waited the full `wait_seconds` and then reported "still working" with an empty answer.
 - `setup` accepts a Gemini CLI `settings.json` with `//` or `/* */` comments, which the Gemini CLI allows. It used to report the file as invalid JSON and skip the Gemini CLI. The comments are not kept in the rewritten file; the old file is saved as `settings.json.bak`.
 - `gemini-pro-mcp setup` handles a Gemini CLI `settings.json` that is valid JSON but not the expected shape. `"mcpServers": null` is treated as empty; a top-level array or a non-object `mcpServers` marks the Gemini CLI as failed with a message, and setup carries on with the other clients. It used to stop with a `TypeError` or `AttributeError`.
+- `google_act` errors for a stale element number say to call `google_page` again. They named `flow_page`, which became `google_page` and no longer exists, so the model was sent to a tool it could not find.
 
 ## 0.1.6
 
