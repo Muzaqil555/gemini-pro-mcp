@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.8
+
+- The Gemini CLI extension allows up to 15 minutes for startup and tool calls, matching the setup command. Its default five-second connection check could report a disconnected server while uvx downloaded dependencies on the first run.
+
 ## 0.1.7
 
 - Added a first-run guide for seven clients and a release check that exercises the Claude plugin launcher over MCP. Antigravity setup can also register the server from an existing desktop configuration when the CLI is missing.
