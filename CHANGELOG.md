@@ -10,6 +10,7 @@
 - `setup` keeps the comments above a Codex `config.toml` table that comes after this server's tables. Running setup again used to delete them along with the server's old settings.
 - `gemini-pro-mcp doctor --flow` reports a Flow error that has no message (such as a bare `TimeoutError`) by its type. It used to crash with `IndexError: list index out of range`.
 - Browser tools put `hl=en` in the query string of a link with a `#` fragment, such as a Colab `#scrollTo=` link. It used to land inside the fragment, so the page did not switch to English. A parameter that merely ends in `hl=` (`shl=1`) no longer stops it either.
+- `file_name` in `video_generate`, `video_edit` and `image_generate` keeps dots that are not a media extension: `demo-v1.2` was saved as `demo-v1.mp4`, and now as `demo-v1.2.mp4`.
 
 ## 0.1.6
 
