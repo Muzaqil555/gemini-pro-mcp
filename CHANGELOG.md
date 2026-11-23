@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Video stitching, media saves and Notebook downloads keep separate filenames when clients request the same output concurrently. A failed video download or disk write reports the interaction ID for retry.
+- Browser calls share Chrome startup. Flow advances its release notes when they block a project, and shot planning ignores numeric arrays before the scene descriptions.
+- Setup supports pip-only environments, retains backups on repeated identical runs and reports partial registration failures. Jules follows continuation tokens for long sessions and repository lists.
+
 - The `.env` file (`~/.config/gemini-pro-mcp/.env`) is read correctly when Windows Notepad saved it with a byte order mark. Before, the first key's name started with an invisible character, so a `GEMINI_API_KEY` on the first line was never found. Lines copied from other projects also work now: an `export ` prefix, a `# comment` after the value, and only matching quotes around a value are removed.
 - A setting that should be a number but isn't, such as `GEMINI_PRO_AGY_TIMEOUT=10m`, no longer stops the server from starting. The server uses the default and says so on stderr, which MCP clients keep in their logs.
 - `gemini_ask` no longer reads a whole file passed in `paths` to decide whether its text fits in the prompt. A large file, such as a video, used to be loaded into memory in full before it was listed by path; now at most about 80 KB of each file is read.

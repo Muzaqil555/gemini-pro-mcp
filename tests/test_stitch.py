@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 import pytest
 
@@ -78,9 +79,40 @@ async def test_stitch_fails_on_an_unreadable_clip(tmp_path):
     assert not out.exists()
 
 
-def test_unique_path(tmp_path):
-    (tmp_path / "v.mp4").write_bytes(b"")
-    assert stitch.unique_path(tmp_path, "v", ".mp4").name == "v-2.mp4"
+async def test_concurrent_stitches_keep_both_outputs(tmp_path):
+    clip = tmp_path / "clip.mp4"
+    make_clip(clip, 1, "blue")
+    output = tmp_path / "joined.mp4"
+    paths = await asyncio.gather(stitch.stitch([clip], output), stitch.stitch([clip], output))
+    assert set(paths) == {output, tmp_path / "joined-2.mp4"}
+    assert all(duration(path) == pytest.approx(1, abs=0.2) for path in paths)
+
+
+@pytest.mark.parametrize("cancelled", [False, True])
+async def test_failed_stitch_keeps_concurrent_success(tmp_path, monkeypatch, cancelled):
+    clip = tmp_path / "clip.mp4"
+    clip.touch()
+    requested = tmp_path / "output.mp4"
+    started, release = asyncio.Event(), asyncio.Event()
+
+    async def run(args):
+        if not started.is_set():
+            started.set()
+            await release.wait()
+            return 0, "Impossible to open input"
+        Path(args[-1]).write_bytes(b"finished")
+        return 0, ""
+
+    monkeypatch.setattr(stitch, "_run", run)
+    first = asyncio.create_task(stitch.stitch([clip], requested))
+    await started.wait()
+    saved = await stitch.stitch([clip], requested)
+    if cancelled:
+        first.cancel()
+    release.set()
+    with pytest.raises(asyncio.CancelledError if cancelled else stitch.StitchError):
+        await first
+    assert saved.read_bytes() == b"finished"
 
 
 def _running(pid: int) -> bool:

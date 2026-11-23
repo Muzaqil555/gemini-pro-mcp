@@ -193,3 +193,16 @@ async def test_sources_reads_every_page(monkeypatch):
     jules.register(mcp, Settings.from_env())
     text = text_of(await mcp.call_tool("jules_sources", {}))
     assert text.splitlines() == ["github/o/a", "github/o/b"]
+
+
+async def test_pagination_continues_past_twenty_pages_and_detects_cycles(monkeypatch):
+    async def page(method, path, params):
+        number = int(params.get("pageToken", 1))
+        return {"sources": [{"id": number}], "nextPageToken": str(min(22, number + 1))}
+
+    monkeypatch.setattr(jules, "call", page)
+    ids = []
+    with pytest.raises(jules.JulesError, match="repeated page token"):
+        async for source in jules.paged_items("sources", "sources"):
+            ids.append(source["id"])
+    assert ids == list(range(1, 23))

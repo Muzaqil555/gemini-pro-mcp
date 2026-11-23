@@ -9,6 +9,7 @@ Real environment variables always win over the file.
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import sys
 from dataclasses import dataclass
@@ -26,8 +27,7 @@ def parse_env_line(line: str) -> tuple[str, str] | None:
     """The (key, value) of one .env line, or None for blank lines and comments.
 
     Accepts the forms people copy from other projects: an `export ` prefix,
-    values in matching single or double quotes, and `# comments` after an
-    unquoted value.
+    values in matching single or double quotes, and `# comments` after a value.
     """
     line = line.strip()
     if not line or line.startswith("#") or "=" not in line:
@@ -37,10 +37,11 @@ def parse_env_line(line: str) -> tuple[str, str] | None:
     if key.startswith("export "):
         key = key[len("export ") :].strip()
     value = value.strip()
-    if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
-        value = value[1:-1]
-    elif " #" in value:
-        value = value.split(" #", 1)[0].rstrip()
+    quoted = re.fullmatch(r"""(["'])(.*?)\1(?:\s+#.*)?""", value)
+    if quoted:
+        value = quoted.group(2)
+    else:
+        value = re.split(r"\s+#", value, maxsplit=1)[0]
     return (key, value) if key else None
 
 

@@ -29,7 +29,7 @@ from mcp_types import ToolAnnotations
 
 from .. import agy
 from ..config import Settings, spending_note
-from ..stitch import StitchError, stitch, unique_path
+from ..stitch import StitchError, stitch
 from . import page as flow_page_lib
 from .browser import FlowError, connect, lock_for
 
@@ -132,6 +132,7 @@ class Flow:
         await page.locator(PROMPT_BOX).first.wait_for(timeout=30_000)
         if self.signed_out():
             raise FlowError(SIGN_IN)
+        await self.dismiss_release_notes()
         await self.close_account_panel()
         return re.search(r"/project/([0-9a-f-]{36})", page.url).group(1)
 
@@ -355,6 +356,29 @@ class Flow:
             groups[tab] = [c for c in await self.page.evaluate(TOOL_CARDS_JS) if c["name"]]
         return groups
 
+    async def dismiss_release_notes(self) -> None:
+        dialog = self.page.locator("flow-change-log-modal")
+        if not await dialog.is_visible():
+            return
+        dismiss = dialog.get_by_role("button", name="Get started", exact=True)
+        # The last slide enables the button. Only advance the official changelog viewer.
+        iframe = dialog.locator(
+            'iframe[src^="https://www.gstatic.com/aitestkitchen/website/flow/changelogs/"]'
+        )
+        try:
+            if await iframe.count() and not await dismiss.is_enabled():
+                slides = iframe.content_frame
+                next_slide = slides.locator('label[aria-label="Next"]:visible')
+                for _ in range(await slides.locator(".slide").count()):
+                    if await dismiss.is_enabled() or not await next_slide.is_visible():
+                        break
+                    await next_slide.click(timeout=3000)
+            await dismiss.click(timeout=3000)
+        except Exception as e:
+            raise FlowError(
+                "Finish the release notes in the dedicated Flow Chrome window, then retry."
+            ) from e
+
     async def credits(self) -> str | None:
         """The credit balance from the account panel, or None if it cannot be read."""
         page = self.page
@@ -445,9 +469,8 @@ def parse_shots(text: str, count: int) -> list[str] | None:
             continue
         if not isinstance(shots, list) or len(shots) != count:
             continue
-        shots = [str(s).strip() for s in shots]
-        if all(shots):
-            return shots
+        if all(isinstance(shot, str) and shot.strip() for shot in shots):
+            return [shot.strip() for shot in shots]
     return None
 
 
@@ -555,7 +578,7 @@ async def run_job(settings: Settings, job: dict) -> None:
             job["done_clips"] = index
         if len(clips) > 1:
             job["status"] = "joining clips"
-            output = unique_path(settings.output_dir, job["stem"], ".mp4")
+            output = settings.output_dir / f"{job['stem']}.mp4"
             job["output"] = await stitch(clips, output)
         else:
             job["output"] = clips[0]
