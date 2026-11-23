@@ -25,6 +25,12 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -q
+      - name: Install the Claude Code CLI
+        if: matrix.python == '3.13'
+        run: npm install --global @anthropic-ai/claude-code@2.1.319
+      - name: Install the plugin in a fresh profile and call its offline tool
+        if: matrix.python == '3.13'
+        run: uv run python scripts/check_release.py --plugin
       - name: Test video stitching with bundled ffmpeg
         if: matrix.python == '3.13'
         run: uv run --extra flow pytest -q tests/test_stitch.py

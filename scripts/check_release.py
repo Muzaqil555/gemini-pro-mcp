@@ -55,8 +55,12 @@ def plugin_launcher(profile):
         [claude, "plugin", "list", "--json"], cwd=profile, env=env, text=True, encoding="utf-8"
     )
     plugin = next(p for p in json.loads(installed) if p["id"] == "gemini-pro@gemini-pro-mcp")
+    assert plugin["enabled"], "Claude installed the plugin but did not enable it"
     folder = Path(plugin["installPath"])
     assert (folder / "skills" / "gemini-pro" / "SKILL.md").is_file()
+    commands = {path.stem for path in (folder / "commands").glob("*.md")}
+    expected = {"gemini-review", "gemini-research", "second-opinion", "jules", "notebook", "video"}
+    assert expected <= commands, f"Missing plugin commands: {sorted(expected - commands)}"
     manifest = json.loads((folder / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
     assert manifest["version"] == __version__
     server = manifest["mcpServers"]["gemini-pro"]

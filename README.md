@@ -22,6 +22,26 @@ Send this in the chat of a coding agent that can run commands on your computer:
 
 In **Claude Code**, install the plugin by default. Run `claude plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp`. It registers the MCP server and includes the Gemini skill and six slash commands. For other clients or to verify an existing installation, follow the [agent installation instructions](INSTALL.md).
 
+### Try your first review
+
+After reloading your agent, start with `google_pro_benefits` to check the connection. It works offline after installation. For a live review, sign in once with `agy` using your Google AI Pro or Ultra account, then paste this into the same chat:
+
+```text
+Ask Gemini to review this Python checkout change. Free orders have price 0.
+Old: if price is None: raise ValueError("missing price")
+New: if not price: raise ValueError("missing price")
+Which order breaks? Give me one regression test.
+```
+
+**What to look for:** The new condition rejects a free order because zero is false in Python. A regression test should check that a price of zero is accepted. You can try this in an empty project.
+
+[![Claude asks Gemini to review a checkout change. A test reproduces the free-order bug and passes after the fix.](https://raw.githubusercontent.com/Muzaqil555/gemini-pro-mcp/main/docs/checkout-review.gif)](https://github.com/Muzaqil555/gemini-pro-mcp/releases/download/v0.1.7/checkout-review.mp4)
+
+[Watch the 30-second review (MP4)](https://github.com/Muzaqil555/gemini-pro-mcp/releases/download/v0.1.7/checkout-review.mp4) · Edited excerpts from a real Claude Code session.
+
+<details>
+<summary>Installation commands for all seven clients</summary>
+
 | Client | Client ID | Installation |
 |---|---|---|
 | Claude Code | `claude` | To install the same plugin from the chat input, use `/plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp` inside Claude Code. |
@@ -32,11 +52,9 @@ In **Claude Code**, install the plugin by default. Run `claude plugin install ge
 | Claude Desktop | `claude-desktop` | Run setup in a terminal, then quit and reopen Claude Desktop. |
 | Windsurf | `windsurf` | Run setup, then refresh the MCP servers. |
 
-Choose one installation method per client. To register standalone MCP servers across all detected clients, run `uvx gemini-pro-mcp setup`. The first tool call works offline after installation. For a live code review, sign in once with `agy`, then ask: **“Get a second opinion from Gemini on my diff.”** See the [prerequisites](#1-prerequisites) for optional tools and billing.
+To register standalone MCP servers across all detected clients, run `uvx gemini-pro-mcp setup`. See the [prerequisites](#1-prerequisites) for optional tools and billing.
 
-[![Claude asks Gemini to review a checkout change. A test reproduces the free-order bug and passes after the fix.](https://raw.githubusercontent.com/Muzaqil555/gemini-pro-mcp/main/docs/checkout-review.gif)](https://github.com/Muzaqil555/gemini-pro-mcp/releases/download/v0.1.7/checkout-review.mp4)
-
-[Watch the 30-second review (MP4)](https://github.com/Muzaqil555/gemini-pro-mcp/releases/download/v0.1.7/checkout-review.mp4) · Edited excerpts from a real Claude Code session.
+</details>
 
 If it saves you an API bill or a tab switch, a ⭐ helps other AI Pro users find it.
 
