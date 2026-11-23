@@ -49,6 +49,16 @@ async def test_stitch_joins_in_order(tmp_path):
     assert duration(out) == pytest.approx(3, abs=0.2)
 
 
+async def test_stitch_handles_a_quote_in_the_folder_name(tmp_path):
+    folder = tmp_path / "Muzaqil's clips"
+    folder.mkdir()
+    a, b = folder / "a.mp4", folder / "b.mp4"
+    make_clip(a, 1, "red")
+    make_clip(b, 1, "blue")
+    out = await stitch.stitch([a, b], folder / "out.mp4")
+    assert duration(out) == pytest.approx(2, abs=0.2)
+
+
 async def test_stitch_reports_missing_clip(tmp_path):
     with pytest.raises(stitch.StitchError, match="not found"):
         await stitch.stitch([tmp_path / "nope.mp4"], tmp_path / "out.mp4")
