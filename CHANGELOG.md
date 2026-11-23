@@ -31,6 +31,7 @@
 - `notebook_studio` no longer overwrites an earlier Audio or Video Overview that Notebook downloads under the same file name. The new file gets a `-2`, `-3`... suffix, as `flow_*` and the media tools already do.
 - `notebook_ask` says when `wait_seconds` ran out while the notebook was still writing its answer. It used to return the cut-off text as if it were the whole answer.
 - `flow_act` and `google_act` with `action='replace'` replace the text of a rich text box on macOS too. They pressed Control+A to select it, which on macOS only moves the cursor, so the new text was added to the old one.
+- `gemini-pro-mcp setup` carries on when a client's own CLI (`claude mcp add`, `agy mcp add`) hangs for two minutes or cannot start. It marks that client as failed and prints the command to run by hand, where it used to stop with a `TimeoutExpired` traceback before the other clients.
 
 ## 0.1.6
 

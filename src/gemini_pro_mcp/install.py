@@ -297,19 +297,23 @@ def gemini_settings(text: str, name: str, command: str, args: list[str], env: di
 def run_commands(commands: list[list[str]], dry_run: bool) -> tuple[bool, str]:
     if dry_run:
         return True, "would run: " + " ; ".join(subprocess.list2cmdline(c) for c in commands)
-    result = None
-    for command in commands:
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=120,
-            stdin=subprocess.DEVNULL,
-        )
-    out = (result.stdout + result.stderr).strip().splitlines() if result else []
-    detail = out[-1] if out else ""
+    result, detail = None, ""
+    try:
+        for command in commands:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=120,
+                stdin=subprocess.DEVNULL,
+            )
+    except (OSError, subprocess.TimeoutExpired) as e:
+        result, detail = None, str(e)
+    else:
+        out = (result.stdout + result.stderr).strip().splitlines() if result else []
+        detail = out[-1] if out else ""
     if result is None or result.returncode != 0:
         # The client's own CLI failed (not installed right, too old...): say what to run.
         detail += "\n      add it by hand: " + subprocess.list2cmdline(commands[-1])

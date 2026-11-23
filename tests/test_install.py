@@ -193,3 +193,13 @@ def test_flow_live_check_reports_an_error_without_a_message(monkeypatch):
     monkeypatch.setattr(tools, "Flow", Hanging)
     check = asyncio.run(install.flow_live_check(Settings.from_env()))
     assert (check.ok, check.detail) == (False, "TimeoutError")
+
+
+def test_run_commands_reports_a_hanging_client(monkeypatch):
+    def hang(command, **kwargs):
+        raise install.subprocess.TimeoutExpired(command, kwargs["timeout"])
+
+    monkeypatch.setattr(install.subprocess, "run", hang)
+    ok, detail = install.run_commands([["claude", "mcp", "add", "x"]], dry_run=False)
+    assert ok is False
+    assert "timed out" in detail and "add it by hand: claude mcp add x" in detail
