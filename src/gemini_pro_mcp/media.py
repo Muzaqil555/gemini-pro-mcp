@@ -499,6 +499,9 @@ def register(mcp: MCPServer, settings: Settings) -> Media:
             if failed:
                 return failed
             image = interaction.output_image
+            if image is None:
+                said = getattr(interaction, "output_text", None)
+                return "Error: No image came back." + (f" Gemini said: {said}" if said else "")
             extension = (mimetypes.guess_extension(image.mime_type or "") or ".png").lstrip(".")
             path = media.save_path(make_file_name(prompt, file_name, extension))
             path.write_bytes(await media.download(image))
