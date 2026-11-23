@@ -268,8 +268,18 @@ def codex_config(text: str, name: str, command: str, args: list[str], env: dict[
     return "\n".join([*kept, "", *block]).lstrip("\n") + "\n"
 
 
+# A JSON string, or a // or /* */ comment (the Gemini CLI allows comments in settings.json).
+JSON_STRING_OR_COMMENT = re.compile(r'("(?:\\.|[^"\\])*")|//[^\n]*|/\*.*?\*/', re.DOTALL)
+
+
+def strip_json_comments(text: str) -> str:
+    return JSON_STRING_OR_COMMENT.sub(lambda m: m.group(1) or "", text)
+
+
 def gemini_settings(text: str, name: str, command: str, args: list[str], env: dict[str, str]):
-    """The Gemini CLI's settings.json with this server added and everything else kept."""
+    """The Gemini CLI's settings.json with this server added and everything else kept
+    (except comments, which JSON cannot hold; setup keeps the old file as .bak)."""
+    text = strip_json_comments(text)
     data = json.loads(text) if text.strip() else {}
     server: dict = {"command": command, "args": args, "timeout": TOOL_TIMEOUT_SECONDS * 1000}
     if env:

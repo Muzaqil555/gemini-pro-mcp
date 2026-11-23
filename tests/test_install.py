@@ -70,6 +70,21 @@ def test_gemini_settings_keep_other_keys():
     )
 
 
+def test_gemini_settings_accept_comments():
+    # The Gemini CLI strips comments from settings.json before parsing it.
+    old = (
+        "{\n"
+        "  // my theme\n"
+        '  "theme": "dark", /* not "light" */\n'
+        '  "url": "https://example.com//path"\n'
+        "}\n"
+    )
+    data = json.loads(install.gemini_settings(old, "gemini-pro", COMMAND, ARGS, ENV))
+    assert data["theme"] == "dark"
+    assert data["url"] == "https://example.com//path"
+    assert "gemini-pro" in data["mcpServers"]
+
+
 def test_client_commands():
     claude = install.claude_commands("claude", "gemini-pro", COMMAND, ARGS, ENV)
     assert claude[0] == ["claude", "mcp", "remove", "gemini-pro", "--scope", "user"]
