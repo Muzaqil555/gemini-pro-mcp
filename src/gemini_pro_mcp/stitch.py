@@ -80,26 +80,30 @@ async def stitch(clips: list[Path], output: Path) -> Path:
             "".join(f"file '{clip.resolve().as_posix()}'\n" for clip in clips), encoding="utf-8"
         )
         base = [exe, "-y", "-hide_banner", "-loglevel", "error", "-f", "concat", "-safe", "0"]
-        code, err = await _run([*base, "-i", str(listing), "-c", "copy", str(output)])
-        if code != 0:
-            code, err = await _run(
-                [
-                    *base,
-                    "-i",
-                    str(listing),
-                    "-c:v",
-                    "libx264",
-                    "-preset",
-                    "veryfast",
-                    "-crf",
-                    "18",
-                    "-c:a",
-                    "aac",
-                    "-movflags",
-                    "+faststart",
-                    str(output),
-                ]
-            )
+        try:
+            code, err = await _run([*base, "-i", str(listing), "-c", "copy", str(output)])
+            if code != 0:
+                code, err = await _run(
+                    [
+                        *base,
+                        "-i",
+                        str(listing),
+                        "-c:v",
+                        "libx264",
+                        "-preset",
+                        "veryfast",
+                        "-crf",
+                        "18",
+                        "-c:a",
+                        "aac",
+                        "-movflags",
+                        "+faststart",
+                        str(output),
+                    ]
+                )
+        except asyncio.CancelledError:
+            output.unlink(missing_ok=True)
+            raise
         if code != 0:
             raise StitchError(f"ffmpeg failed: {err.strip()[:600]}")
     return output
