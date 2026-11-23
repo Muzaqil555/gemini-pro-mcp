@@ -55,7 +55,12 @@ async def _run(args: list[str]) -> tuple[int, str]:
         stdout=asyncio.subprocess.DEVNULL,
         stderr=asyncio.subprocess.PIPE,
     )
-    _, stderr = await process.communicate()
+    try:
+        _, stderr = await process.communicate()
+    except asyncio.CancelledError:  # the client cancelled the tool call
+        process.kill()
+        await process.wait()
+        raise
     return process.returncode, stderr.decode("utf-8", errors="replace")
 
 

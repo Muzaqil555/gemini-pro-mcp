@@ -1,4 +1,7 @@
+import asyncio
+import os
 import subprocess
+import sys
 
 import pytest
 
@@ -57,3 +60,20 @@ async def test_stitch_reports_missing_clip(tmp_path):
 def test_unique_path(tmp_path):
     (tmp_path / "v.mp4").write_bytes(b"")
     assert stitch.unique_path(tmp_path, "v", ".mp4").name == "v-2.mp4"
+
+
+async def test_run_stops_ffmpeg_when_the_call_is_cancelled(tmp_path):
+    pid_file = tmp_path / "ffmpeg.pid"
+    script = (
+        f"import os, time; open({str(pid_file)!r}, 'w').write(str(os.getpid())); time.sleep(120)"
+    )
+    task = asyncio.ensure_future(stitch._run([sys.executable, "-c", script]))
+    for _ in range(100):
+        if pid_file.exists() and pid_file.read_text():
+            break
+        await asyncio.sleep(0.05)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    with pytest.raises(ProcessLookupError):
+        os.kill(int(pid_file.read_text()), 0)
