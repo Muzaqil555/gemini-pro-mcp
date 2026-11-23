@@ -16,9 +16,9 @@
 
 ### Try it in your coding agent
 
-Paste this into an agent that can run terminal commands. Replace `cursor` with your client ID from the table.
+Paste this into your coding agent if it can run terminal commands.
 
-> Check that uvx is installed, run `uvx gemini-pro-mcp setup --client cursor`, then tell me how to reload this client and call `google_pro_benefits` to verify the connection.
+> Set up Muzaqil555/gemini-pro-mcp for this client. Check for uvx first. In Claude Code, run `claude plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp`. Otherwise, choose this client's ID and run `uvx gemini-pro-mcp setup --client <id>` (claude, gemini, agy, cursor, codex, claude-desktop or windsurf). Tell me how to reload, then verify the connection with `google_pro_benefits`.
 
 | Client | Client ID | Installation |
 |---|---|---|
