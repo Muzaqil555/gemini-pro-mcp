@@ -6,7 +6,7 @@
 
 Отправьте своему агенту одно сообщение:
 
-> Подключи https://github.com/Muzaqil555/gemini-pro-mcp здесь как MCP-сервер.
+> Установи https://github.com/Muzaqil555/gemini-pro-mcp здесь.
 
 [Команда установки для вашего клиента и 30-секундная демонстрация ревью](../README.md#try-it-in-your-coding-agent)
 

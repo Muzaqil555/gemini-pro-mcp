@@ -6,7 +6,7 @@
 
 Ajanınıza şu mesajı gönderin:
 
-> https://github.com/Muzaqil555/gemini-pro-mcp projesini buraya MCP sunucusu olarak ekle.
+> https://github.com/Muzaqil555/gemini-pro-mcp projesini buraya kur.
 
 [İstemciniz için kurulum komutu ve 30 saniyelik kod inceleme demosu](../README.md#try-it-in-your-coding-agent)
 

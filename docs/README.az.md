@@ -6,7 +6,7 @@
 
 Agentə bunu göndərin:
 
-> https://github.com/Muzaqil555/gemini-pro-mcp bunu bura MCP kimi qoş.
+> https://github.com/Muzaqil555/gemini-pro-mcp bunu bura quraşdır.
 
 [Klientiniz üçün quraşdırma əmri və 30 saniyəlik kod icmalı demosu](../README.md#try-it-in-your-coding-agent)
 

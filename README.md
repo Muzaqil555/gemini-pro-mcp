@@ -18,13 +18,13 @@
 
 Send this in the chat of a coding agent that can run commands on your computer:
 
-> Add https://github.com/Muzaqil555/gemini-pro-mcp as an MCP server here.
+> Install https://github.com/Muzaqil555/gemini-pro-mcp here.
 
-**For the installing agent:** Use the [agent installation instructions](INSTALL.md) to register the released server with your current client and check the connection. The GitHub link identifies the project. The server runs locally over stdio.
+In **Claude Code**, install the plugin by default. Run `claude plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp`. It registers the MCP server and includes the Gemini skill and six slash commands. For other clients or to verify an existing installation, follow the [agent installation instructions](INSTALL.md).
 
 | Client | Client ID | Installation |
 |---|---|---|
-| Claude Code | `claude` | For the skill and six slash commands, use `/plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp` inside Claude Code. |
+| Claude Code | `claude` | To install the same plugin from the chat input, use `/plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp` inside Claude Code. |
 | Gemini CLI | `gemini` | For the extension, run `gemini extensions install https://github.com/Muzaqil555/gemini-pro-mcp`. Open a project you trust and confirm folder trust when prompted to enable MCP. |
 | Antigravity | `agy` | Run setup, then reload the MCP servers in Antigravity. |
 | Cursor | `cursor` | Run setup, then open Cursor Settings → Tools & MCP. |
@@ -32,7 +32,7 @@ Send this in the chat of a coding agent that can run commands on your computer:
 | Claude Desktop | `claude-desktop` | Run setup in a terminal, then quit and reopen Claude Desktop. |
 | Windsurf | `windsurf` | Run setup, then refresh the MCP servers. |
 
-Choose one installation method per client. To configure all detected clients, run `uvx gemini-pro-mcp setup`. The first tool call works offline after installation. For a live code review, sign in once with `agy`, then ask: **“Get a second opinion from Gemini on my diff.”** See the [prerequisites](#1-prerequisites) for optional tools and billing.
+Choose one installation method per client. To register standalone MCP servers across all detected clients, run `uvx gemini-pro-mcp setup`. The first tool call works offline after installation. For a live code review, sign in once with `agy`, then ask: **“Get a second opinion from Gemini on my diff.”** See the [prerequisites](#1-prerequisites) for optional tools and billing.
 
 [![Claude asks Gemini to review a checkout change. A test reproduces the free-order bug and passes after the fix.](https://raw.githubusercontent.com/Muzaqil555/gemini-pro-mcp/main/docs/checkout-review.gif)](https://github.com/Muzaqil555/gemini-pro-mcp/releases/download/v0.1.7/checkout-review.mp4)
 
