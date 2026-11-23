@@ -169,3 +169,20 @@ async def test_network_errors_are_reported_as_jules_errors(monkeypatch):
     jules.register(mcp, Settings.from_env())
     out = text_of(await mcp.call_tool("jules_sessions", {}))
     assert out.startswith("Error: Could not reach the Jules API (ConnectError"), out
+
+
+async def test_sources_reads_every_page(monkeypatch):
+    pages = {
+        None: {"sources": [{"id": "github/o/a"}], "nextPageToken": "t2"},
+        "t2": {"sources": [{"id": "github/o/b"}]},
+    }
+
+    async def fake_call(method, path, body=None, params=None):
+        assert path == "sources"
+        return pages[params.get("pageToken")]
+
+    monkeypatch.setattr(jules, "call", fake_call)
+    mcp = MCPServer("test")
+    jules.register(mcp, Settings.from_env())
+    text = text_of(await mcp.call_tool("jules_sources", {}))
+    assert text.splitlines() == ["github/o/a", "github/o/b"]
