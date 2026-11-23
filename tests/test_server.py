@@ -137,6 +137,13 @@ def test_parse_shots():
     assert parse_shots("no json", 1) is None
 
 
+def test_parse_shots_ignores_brackets_around_the_array():
+    after = '```json\n["a red tram", "the tram stops"]\n```\nBoth shots are [8 s].'
+    assert parse_shots(after, 2) == ["a red tram", "the tram stops"]
+    before = 'Shots [1] and [2], [0-8s] and [8-16s]:\n["a red tram", "the tram stops"]'
+    assert parse_shots(before, 2) == ["a red tram", "the tram stops"]
+
+
 def test_env_file_does_not_override(tmp_path, monkeypatch):
     env = tmp_path / ".env"
     env.write_text("GEMINI_PRO_TEST_A=from-file\n# comment\nGEMINI_PRO_TEST_B='quoted'\n")
