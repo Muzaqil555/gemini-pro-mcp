@@ -36,6 +36,7 @@
 - `video_stitch` reports an error when one of the clips can't be read (for example a truncated download). ffmpeg stopped at that clip but exited successfully, so the tool said "Saved" for a video that was missing every clip from that one on. A failed join no longer leaves a partial file in the output folder.
 - `video_stitch` joins clips whose path contains an apostrophe, such as `Muzaqil's clips/a.mp4`. ffmpeg's file list didn't escape the quote, so ffmpeg could not open the clip.
 - When the MCP client cancels `video_stitch`, ffmpeg is stopped. It used to keep re-encoding in the background and could leave a half-written video at the output path.
+- `video_check` saves the video under the `file_name` given to `video_generate` or `video_edit` when an earlier download of it failed. The name used to be dropped before the download, so a retry saved the file under a default date-and-prompt name.
 
 ## 0.1.6
 
