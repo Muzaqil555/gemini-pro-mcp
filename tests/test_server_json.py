@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 from gemini_pro_mcp import __version__
+from gemini_pro_mcp.install import TOOL_TIMEOUT_SECONDS
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -31,6 +32,7 @@ def test_extension_and_plugin_manifests_match_package():
     assert extension["mcpServers"]["gemini-pro"] == {
         "command": "uvx",
         "args": ["--from", f"gemini-pro-mcp=={__version__}", "gemini-pro-mcp"],
+        "timeout": TOOL_TIMEOUT_SECONDS * 1000,
     }
     # The Claude plugin directory only accepts a launcher pinned to a full git commit
     # (a PyPI version is not a pin there). Pin the server commit before tagging the release.
