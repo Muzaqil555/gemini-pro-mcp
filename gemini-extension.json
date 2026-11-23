@@ -1,11 +1,11 @@
 {
   "name": "gemini-pro-mcp",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Use the rest of your Google AI Pro plan from Gemini CLI: Flow video, Gemini Notebooks, Deep Research, Jules, AI Mode, plus Omni Flash video and Nano Banana images.",
   "mcpServers": {
     "gemini-pro": {
       "command": "uvx",
-      "args": ["gemini-pro-mcp"]
+      "args": ["--from", "gemini-pro-mcp==0.1.7", "gemini-pro-mcp"]
     }
   }
 }
