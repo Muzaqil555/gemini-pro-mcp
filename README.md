@@ -16,9 +16,11 @@
 
 ### Try it in your coding agent
 
-Paste this into your coding agent if it can run terminal commands.
+Send this in the chat of a coding agent that can run commands on your computer:
 
-> Set up Muzaqil555/gemini-pro-mcp for this client. Check for uvx first. In Claude Code, run `claude plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp`. Otherwise, choose this client's ID and run `uvx gemini-pro-mcp setup --client <id>` (claude, gemini, agy, cursor, codex, claude-desktop or windsurf). Tell me how to reload, then verify the connection with `google_pro_benefits`.
+> Add https://github.com/Muzaqil555/gemini-pro-mcp as an MCP server here.
+
+**For the installing agent:** Use the [agent installation instructions](INSTALL.md) to register the released server with your current client and check the connection. The GitHub link identifies the project. The server runs locally over stdio.
 
 | Client | Client ID | Installation |
 |---|---|---|
