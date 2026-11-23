@@ -288,6 +288,10 @@ async def run_agy_capture(args: list[str], cwd: Path, timeout: int) -> tuple[str
         await stop_process_tree(process)
         stderr_task.cancel()
         raise AgyError(f"agy did not answer within {timeout} s.") from None
+    except asyncio.CancelledError:  # the client cancelled the tool call
+        await stop_process_tree(process)
+        stderr_task.cancel()
+        raise
     try:
         err_bytes = await asyncio.wait_for(stderr_task, 5)
     except asyncio.TimeoutError:
