@@ -3,6 +3,7 @@
 ## Unreleased
 
 - The `.env` file (`~/.config/gemini-pro-mcp/.env`) is read correctly when Windows Notepad saved it with a byte order mark. Before, the first key's name started with an invisible character, so a `GEMINI_API_KEY` on the first line was never found. Lines copied from other projects also work now: an `export ` prefix, a `# comment` after the value, and only matching quotes around a value are removed.
+- A setting that should be a number but isn't, such as `GEMINI_PRO_AGY_TIMEOUT=10m`, no longer stops the server from starting. The server uses the default and says so on stderr, which MCP clients keep in their logs.
 
 ## 0.1.6
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -56,6 +57,25 @@ def load_env_file(path: Path | None = None) -> None:
             os.environ.setdefault(*parsed)
 
 
+def _int(name: str, default: int) -> int:
+    """A whole-number setting; a value that isn't one falls back to the default.
+
+    Raising here would stop the server before the MCP client can show any error,
+    so the problem is reported on stderr, which clients keep in their logs.
+    """
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        print(
+            f"gemini-pro-mcp: {name}={raw!r} is not a whole number; using {default}.",
+            file=sys.stderr,
+        )
+        return default
+
+
 def _flag(name: str) -> bool:
     return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
 
@@ -100,7 +120,7 @@ class Settings:
             ).expanduser(),
             agy_path=os.environ.get("AGY_PATH") or shutil.which("agy"),
             agy_model=os.environ.get("GEMINI_PRO_AGY_MODEL") or None,
-            agy_timeout=int(os.environ.get("GEMINI_PRO_AGY_TIMEOUT", "600")),
+            agy_timeout=_int("GEMINI_PRO_AGY_TIMEOUT", 600),
             flow_enabled=_flag("GEMINI_PRO_ENABLE_BROWSER") or _flag("GEMINI_PRO_ENABLE_FLOW"),
             flow_profile_dir=Path(
                 os.environ.get(
@@ -108,7 +128,7 @@ class Settings:
                     home / ".config" / "gemini-pro-mcp" / "flow-chrome-profile",
                 )
             ).expanduser(),
-            flow_cdp_port=int(os.environ.get("GEMINI_PRO_FLOW_PORT", "9333")),
+            flow_cdp_port=_int("GEMINI_PRO_FLOW_PORT", 9333),
             flow_project=os.environ.get("GEMINI_PRO_FLOW_PROJECT") or None,
             auto_approve=_flag("GEMINI_PRO_AUTO_APPROVE"),
         )
