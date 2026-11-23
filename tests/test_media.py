@@ -166,3 +166,21 @@ def test_message_of_reads_nested_body():
     error.body = [{"error": {"code": 400, "message": "API key not valid."}}]
     assert media.message_of(error) == "API key not valid."
     assert "GEMINI_API_KEY" in media.describe_api_error(error)
+
+
+async def test_download_strips_download_suffix_from_file_uri():
+    m = media.Media(Settings.from_env())
+    asked = []
+
+    async def get(name):
+        asked.append(name)
+        return SimpleNamespace(state="ACTIVE")
+
+    async def download(file):
+        return b"MP4DATA"
+
+    files = SimpleNamespace(get=get, download=download)
+    m._client = SimpleNamespace(aio=SimpleNamespace(files=files))
+    uri = "https://generativelanguage.googleapis.com/v1beta/files/abc123:download?alt=media"
+    assert await m.download(SimpleNamespace(data=None, uri=uri)) == b"MP4DATA"
+    assert asked == ["files/abc123"]
