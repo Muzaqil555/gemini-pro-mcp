@@ -21,17 +21,39 @@ def env_file() -> Path:
     return Path(custom).expanduser() if custom else DEFAULT_ENV_FILE
 
 
+def parse_env_line(line: str) -> tuple[str, str] | None:
+    """The (key, value) of one .env line, or None for blank lines and comments.
+
+    Accepts the forms people copy from other projects: an `export ` prefix,
+    values in matching single or double quotes, and `# comments` after an
+    unquoted value.
+    """
+    line = line.strip()
+    if not line or line.startswith("#") or "=" not in line:
+        return None
+    key, value = line.split("=", 1)
+    key = key.strip()
+    if key.startswith("export "):
+        key = key[len("export ") :].strip()
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+        value = value[1:-1]
+    elif " #" in value:
+        value = value.split(" #", 1)[0].rstrip()
+    return (key, value) if key else None
+
+
 def load_env_file(path: Path | None = None) -> None:
     """Reads KEY=VALUE lines into os.environ without overriding set values."""
     path = path or env_file()
     if not path.is_file():
         return
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+    # utf-8-sig: Windows Notepad can save the file with a byte order mark, which
+    # would otherwise become part of the first key's name.
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        parsed = parse_env_line(line)
+        if parsed:
+            os.environ.setdefault(*parsed)
 
 
 def _flag(name: str) -> bool:
