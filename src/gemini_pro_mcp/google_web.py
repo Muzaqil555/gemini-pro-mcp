@@ -59,14 +59,18 @@ def host_of(url: str) -> str:
     return urlparse(url).netloc.lower()
 
 
-def check_url(url: str, *, operate: bool) -> str:
-    if not url.startswith("https://"):
-        raise FlowError("Give a full https:// URL.")
-    host = host_of(url)
+def check_host(host: str, *, operate: bool) -> str:
+    host = host.strip().lower()
     if host in OPERATE or (not operate and host in READ_ONLY_SITES):
         return host
     allowed = ", ".join(sorted(OPERATE | (set() if operate else READ_ONLY_SITES)))
     raise FlowError(f"{host} is not one of the supported Google AI sites: {allowed}")
+
+
+def check_url(url: str, *, operate: bool) -> str:
+    if not url.startswith("https://"):
+        raise FlowError("Give a full https:// URL.")
+    return check_host(host_of(url), operate=operate)
 
 
 def with_english(url: str) -> str:
@@ -223,9 +227,11 @@ def register(mcp: MCPServer, settings: Settings) -> None:
             Page text and elements like "[12] button 'Send message'" (frames f1:...).
         """
         try:
-            host = check_url(url, operate=False) if url else (site or _last_host["value"])
-            if host not in OPERATE | READ_ONLY_SITES:
-                check_url(f"https://{host}/", operate=False)  # raises with the allowed list
+            host = (
+                check_url(url, operate=False)
+                if url
+                else check_host(site or _last_host["value"], operate=False)
+            )
             async with Tab(settings, host) as tab:
                 if url:
                     await tab.goto(url)
