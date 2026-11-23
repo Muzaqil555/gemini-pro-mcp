@@ -4,6 +4,10 @@
 
 **Google AI Pro abunəliyiniz Claude Code, Gemini CLI, Antigravity, Cursor, Codex, Claude Desktop və Windsurf daxilində.** Gemini 4 Argon, Deep Research, Flow videoları, Gemini Notebooks, Jules və artıq ödədiyiniz planın qalan imkanları, 36-ya qədər MCP aləti kimi. Bir əmrlə qurulur.
 
+Agentə bunu göndərin:
+
+> https://github.com/Muzaqil555/gemini-pro-mcp bunu bura MCP kimi qoş.
+
 [Klientiniz üçün quraşdırma əmri və 30 saniyəlik kod icmalı demosu](../README.md#try-it-in-your-coding-agent)
 
 <p align="center"><img src="demo.gif" alt="Demo: Claude Code-da bir cümlə Bakıda bir gün haqqında 2 dəqiqəlik videoya çevrilir; video Google Flow-da, AI Pro planının kreditləri ilə hazırlanır" width="720"></p>
