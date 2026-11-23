@@ -180,3 +180,21 @@ def test_message_of_reads_nested_body():
 )
 def test_make_file_name_keeps_dots_that_are_not_an_extension(wanted, extension, expected):
     assert media.make_file_name("prompt", wanted, extension) == expected
+
+
+async def test_download_strips_download_suffix_from_file_uri():
+    m = media.Media(Settings.from_env())
+    asked = []
+
+    async def get(name):
+        asked.append(name)
+        return SimpleNamespace(state="ACTIVE")
+
+    async def download(file):
+        return b"MP4DATA"
+
+    files = SimpleNamespace(get=get, download=download)
+    m._client = SimpleNamespace(aio=SimpleNamespace(files=files))
+    uri = "https://generativelanguage.googleapis.com/v1beta/files/abc123:download?alt=media"
+    assert await m.download(SimpleNamespace(data=None, uri=uri)) == b"MP4DATA"
+    assert asked == ["files/abc123"]

@@ -99,7 +99,7 @@ class Media:
             return base64.b64decode(content.data)
         if not content.uri:
             raise MediaError("The result came back without data or a link.")
-        match = re.search(r"files/([^/?#]+)", content.uri)
+        match = re.search(r"files/([^/?#:]+)", content.uri)
         if match:
             name = f"files/{match.group(1)}"
             for _ in range(60):
