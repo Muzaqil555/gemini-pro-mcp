@@ -8,6 +8,12 @@ Ajanınıza şu mesajı gönderin:
 
 > https://github.com/Muzaqil555/gemini-pro-mcp projesini buraya kur.
 
+İlk kod incelemesi için `agy` ile Google AI Pro veya Ultra hesabınıza giriş yapıp ajana şunu gönderin:
+
+> Gemini'ye sor: Python'da fiyat kontrolünü `if price is None` yerine `if not price` olarak değiştirirsem fiyatı 0 olan siparişe ne olur? Bu durum için bir test göster.
+
+Yeni koşul ücretsiz siparişi reddeder. Test, sıfır fiyatın kabul edildiğini doğrulamalıdır.
+
 [İstemciniz için kurulum komutu ve 30 saniyelik kod inceleme demosu](../README.md#try-it-in-your-coding-agent)
 
 <p align="center"><img src="demo.gif" alt="Demo: Claude Code'da tek bir cümle, Bakü'de bir günü anlatan 2 dakikalık videoya dönüşür; video Google Flow'da, AI Pro planının kredileriyle üretilir" width="720"></p>
