@@ -6,6 +6,7 @@
 - A setting that should be a number but isn't, such as `GEMINI_PRO_AGY_TIMEOUT=10m`, no longer stops the server from starting. The server uses the default and says so on stderr, which MCP clients keep in their logs.
 - `gemini_ask` no longer reads a whole file passed in `paths` to decide whether its text fits in the prompt. A large file, such as a video, used to be loaded into memory in full before it was listed by path; now at most about 80 KB of each file is read.
 - When the MCP client cancels a `gemini_*` tool call, agy and the processes it started are stopped. They used to keep running for up to the 10-minute timeout, so `gemini_code` could go on editing files after the user cancelled.
+- A `GEMINI_PRO_CHROME` that is not a program is reported as such. `doctor` used to show it as `[ok]` Chrome, and the browser tools then failed with a `FileNotFoundError` and a request to report a changed page. It may also be a program name on PATH, such as `chromium`.
 
 ## 0.1.6
 
