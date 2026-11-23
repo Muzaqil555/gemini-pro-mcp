@@ -22,6 +22,7 @@
 - `google_act` errors for a stale element number say to call `google_page` again. They named `flow_page`, which became `google_page` and no longer exists, so the model was sent to a tool it could not find.
 - `google_page` checks its `site` argument against the supported Google AI sites, as it already did for `url`. Called with only `site`, it opened `https://<site>/` in the signed-in Chrome profile for any host, including sign-in pages and sites outside Google.
 - `image_generate` returns "No image came back" with Gemini's own text when the model answers without an image, for example when it declines a prompt. Before, the tool failed with `AttributeError: 'NoneType' object has no attribute 'mime_type'`.
+- `jules_status` follows the activity list's `nextPageToken`. It read only the first page of 100 activities, so for a long session the "recent activity" it showed stopped at activity 100 and never included the latest question, progress or completion.
 
 ## 0.1.6
 
