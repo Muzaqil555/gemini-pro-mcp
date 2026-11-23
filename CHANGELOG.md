@@ -16,6 +16,7 @@
 - `flow_make_video` finds the clips of an earlier run again when `file_name` contains `[`, `]`, `*` or `?`. The name was used as a glob pattern, so a resumed job did not see the clips it had already saved and generated them again, spending Flow credits a second time.
 - `notebook_create` and `notebook_add_sources` check that every file in `files` exists before opening Chrome. `notebook_create` used to make a new, empty notebook first and then fail on the missing file, leaving the empty notebook behind.
 - `gemini_app` says which files in `files` don't exist before opening Chrome. A wrong path used to fail inside the browser, after the model and tool pickers had been clicked, with an error asking the user to report a changed page.
+- `gemini_app_result` only accepts Gemini app chat URLs. A URL of another supported site (Docs, Drive, Flow...) was opened in the Gemini tab, where no answer can be found, so the tool waited the full `wait_seconds` and then reported "still working" with an empty answer.
 
 ## 0.1.6
 
