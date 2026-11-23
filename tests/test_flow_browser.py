@@ -1,4 +1,6 @@
+import sys
 import threading
+import types
 
 import pytest
 
@@ -15,6 +17,13 @@ async def test_connect_starts_chrome_off_the_event_loop(monkeypatch, tmp_path):
         threads.append(threading.current_thread())
         raise browser.FlowError("no chrome")
 
+    # Stub playwright so the test runs even when the optional [flow] extra is not installed.
+    fake_playwright = types.ModuleType("playwright")
+    fake_async_api = types.ModuleType("playwright.async_api")
+    fake_async_api.async_playwright = None
+    fake_playwright.async_api = fake_async_api
+    monkeypatch.setitem(sys.modules, "playwright", fake_playwright)
+    monkeypatch.setitem(sys.modules, "playwright.async_api", fake_async_api)
     monkeypatch.setattr(browser, "launch_chrome", fake_launch)
     settings = Settings(
         output_dir=tmp_path,
