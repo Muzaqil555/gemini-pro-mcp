@@ -222,7 +222,7 @@ async def _act(page, ref: str, action: str, text: str | None, files: list[str] |
         await target.click(timeout=10_000)
         if action == "replace":
             if editable:
-                await page.keyboard.press("Control+A")
+                await page.keyboard.press("ControlOrMeta+A")  # Meta on macOS
                 await page.keyboard.press("Delete")
             else:
                 await target.fill("")

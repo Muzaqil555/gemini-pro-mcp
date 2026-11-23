@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `flow_act` and `google_act` with `action='replace'` replace the text of a rich text box on macOS too. They pressed Control+A to select it, which on macOS only moves the cursor, so the new text was added to the old one.
+
 ## 0.1.6
 
 - `gemini_ask`, `gemini_research` and `gemini_code` return as soon as Gemini's answer is in. After answering, agy can keep running for minutes while it stops the MCP servers in its config, and the tools waited for it, up to their 10-minute timeout, and then reported a timeout instead of the answer. When Gemini returns no text, the tools now say so instead of returning an empty answer, and include agy's own explanation.
