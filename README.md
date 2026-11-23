@@ -23,7 +23,7 @@ Paste this into your coding agent if it can run terminal commands.
 | Client | Client ID | Installation |
 |---|---|---|
 | Claude Code | `claude` | For the skill and six slash commands, use `/plugin install gemini-pro --marketplace Muzaqil555/gemini-pro-mcp` inside Claude Code. |
-| Gemini CLI | `gemini` | For the extension, run `gemini extensions install https://github.com/Muzaqil555/gemini-pro-mcp`. |
+| Gemini CLI | `gemini` | For the extension, run `gemini extensions install https://github.com/Muzaqil555/gemini-pro-mcp`. Open a project you trust and confirm folder trust when prompted to enable MCP. |
 | Antigravity | `agy` | Run setup, then reload the MCP servers in Antigravity. |
 | Cursor | `cursor` | Run setup, then open Cursor Settings → Tools & MCP. |
 | Codex | `codex` | Run setup, then start a new session. |
