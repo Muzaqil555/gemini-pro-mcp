@@ -49,8 +49,8 @@ def setup(tmp_path, monkeypatch):
     server = MCPServer("test")
     m = media.register(server, settings)
 
-    def use(interactions):
-        m._client = SimpleNamespace(aio=SimpleNamespace(interactions=interactions))
+    def use(interactions, files=None):
+        m._client = SimpleNamespace(aio=SimpleNamespace(interactions=interactions, files=files))
         return interactions
 
     return server, use, tmp_path
@@ -217,3 +217,35 @@ async def test_download_strips_download_suffix_from_file_uri():
     uri = "https://generativelanguage.googleapis.com/v1beta/files/abc123:download?alt=media"
     assert await m.download(SimpleNamespace(data=None, uri=uri)) == b"MP4DATA"
     assert asked == ["files/abc123"]
+
+
+class FakeFiles:
+    """Stands in for client.aio.files; an upload ends in `final_state`."""
+
+    def __init__(self, final_state):
+        self.final_state = final_state
+
+    async def upload(self, file):
+        return SimpleNamespace(name="files/abc", uri="https://x/files/abc", state="PROCESSING")
+
+    async def get(self, name):
+        return SimpleNamespace(name=name, uri="https://x/files/abc", state=self.final_state)
+
+
+async def test_video_edit_stops_when_the_upload_fails(setup, monkeypatch):
+    server, use, tmp = setup
+
+    async def no_wait(seconds):
+        pass
+
+    monkeypatch.setattr(media.asyncio, "sleep", no_wait)
+    fake = use(FakeInteractions(video_output()), files=FakeFiles("FAILED"))
+    clip = tmp / "clip.mp4"
+    clip.write_bytes(b"MP4")
+    result = text_of(
+        await server.call_tool(
+            "video_edit", {"instruction": "Make it night", "video_path": str(clip)}
+        )
+    )
+    assert result.startswith("Error:") and "could not process" in result
+    assert fake.requests == []  # nothing was sent for generation

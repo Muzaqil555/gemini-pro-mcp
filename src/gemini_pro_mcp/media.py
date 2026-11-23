@@ -120,6 +120,11 @@ class Media:
                 break
             await asyncio.sleep(3)
             uploaded = await self.client.aio.files.get(name=uploaded.name)
+        state = str(getattr(uploaded.state, "value", uploaded.state) or "").upper()
+        if state.endswith("FAILED"):
+            raise MediaError(f"Google could not process the uploaded video: {path}")
+        if state.endswith("PROCESSING"):
+            raise MediaError(f"Google is still processing the uploaded video: {path}. Try again.")
         return uploaded.uri
 
     # -- interactions ------------------------------------------------------

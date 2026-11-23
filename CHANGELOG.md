@@ -37,6 +37,7 @@
 - `video_stitch` joins clips whose path contains an apostrophe, such as `Muzaqil's clips/a.mp4`. ffmpeg's file list didn't escape the quote, so ffmpeg could not open the clip.
 - When the MCP client cancels `video_stitch`, ffmpeg is stopped. It used to keep re-encoding in the background and could leave a half-written video at the output path.
 - `video_check` saves the video under the `file_name` given to `video_generate` or `video_edit` when an earlier download of it failed. The name used to be dropped before the download, so a retry saved the file under a default date-and-prompt name.
+- `video_edit` with `video_path` stops with an error when Google fails to process the uploaded video, or is still processing it after three minutes. It used to send the unusable file on to a paid generation request anyway.
 
 ## 0.1.6
 
